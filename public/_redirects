@@ -1,0 +1,4 @@
+/for /join#who 301
+/for/ /join#who 301
+/blog /journal/ 301
+/blog/* /journal/:splat 301

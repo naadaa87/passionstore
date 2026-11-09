@@ -1,0 +1,42 @@
+{
+  "_설명": "열정상회 홈페이지 설정 파일입니다. 고친 뒤 Commit changes를 누르면 Cloudflare가 다시 빌드합니다. 큰따옴표와 쉼표를 지우지 않도록 조심하세요.",
+
+  "url": "https://passionstore.pages.dev",
+  "name": "열정상회",
+  "updated": "2026-11-09",
+
+  "verification": {
+    "_설명": "검색엔진에서 받은 소유확인 코드를 넣습니다. 네이버·구글·빙은 content 값만, 다음은 robots.txt에 넣으라는 한 줄 전체를 넣습니다.",
+    "naver": "",
+    "google": "",
+    "bing": "",
+    "daumRobotsLine": ""
+  },
+
+  "contact": {
+    "email": "",
+    "kakaoChannel": "",
+    "instagram": "",
+    "naverBlog": ""
+  },
+
+  "operator": {
+    "name": "열정상회",
+    "representative": "",
+    "registrationNo": "",
+    "address": "",
+    "privacyOfficer": "",
+    "privacyEmail": ""
+  },
+
+  "fees": {
+    "guest": "첫 장날 공지 때 안내",
+    "sarangbang": "공지 예정",
+    "member": "공지 예정",
+    "note": "회비는 첫 모집 전에 확정해 이 페이지에 공지합니다."
+  },
+
+  "jangnal": [],
+
+  "team": []
+}
