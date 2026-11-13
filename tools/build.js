@@ -213,7 +213,7 @@ write('sitemap.xml', sitemap);
 /* ---------- RSS ---------- */
 const rfc822 = (d) => new Date(`${d}T09:00:00+09:00`).toUTCString();
 const cdata = (s) => `<![CDATA[${String(s).replace(/]]>/g, ']]]]><![CDATA[>')}]]>`;
-const absolutize = (html) => html.replace(/href="\//g, `href="${site.url}/`);
+const absolutize = (html) => html.replace(/(href|src)="\//g, `$1="${site.url}/`);
 const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
@@ -242,6 +242,7 @@ const robots = [
   'User-agent: *',
   'Allow: /',
   'Disallow: /api/',
+  'Disallow: /admin',
   '',
   `Sitemap: ${site.url}/sitemap.xml`,
   '',
@@ -257,5 +258,20 @@ const runtime = {
   team: site.team,
 };
 write('assets/js/site-config.js', `/* 자동 생성 파일입니다. 고칠 때는 저장소 맨 위의 site.json을 고치세요. */\nwindow.SITE_CONFIG = ${JSON.stringify(runtime, null, 2)};\n`);
+
+/* ---------- 관리자 화면(admin/ → public/admin/) ---------- */
+const ADMIN = path.join(ROOT, 'admin');
+const mdSrc = fs.readFileSync(path.join(__dirname, 'md.js'), 'utf8');
+const adminFiles = fs.readdirSync(ADMIN).filter((f) => /\.(html|css|js)$/.test(f));
+const adminHash = crypto.createHash('md5');
+adminFiles.forEach((f) => adminHash.update(fs.readFileSync(path.join(ADMIN, f))));
+adminHash.update(mdSrc);
+const adminVersion = adminHash.digest('hex').slice(0, 8);
+adminFiles.forEach((f) => {
+  let text = fs.readFileSync(path.join(ADMIN, f), 'utf8');
+  if (f.endsWith('.html')) text = text.replace(/\{\{v\}\}/g, adminVersion);
+  write(path.join('admin', f), text);
+});
+write('admin/md.js', `/* 자동 생성 파일입니다. 고칠 때는 tools/md.js를 고치세요. 관리자 화면의 상회보 미리보기에 씁니다. */\n(function () {\nvar module = { exports: {} };\n${mdSrc}\nwindow.MD = module.exports;\n})();\n`);
 
 console.log(`빌드 완료: 페이지 ${pages.length}개, 상회보 글 ${posts.length}편, 주소 ${site.url}`);

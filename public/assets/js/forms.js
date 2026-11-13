@@ -20,6 +20,7 @@
         else data[el.name] = (el.name === 'times' || el.name === 'roles') ? [el.value] : el.value;
       } else {
         data[el.name] = el.value.trim();
+        if (el.hasAttribute('data-jangnal-select') && el.selectedIndex >= 0) data.sessionLabel = el.options[el.selectedIndex].text;
       }
     });
     return data;
@@ -43,6 +44,7 @@
     Object.keys(LABELS).forEach(function (k) {
       if (data[k] == null || data[k] === '') return;
       var v = Array.isArray(data[k]) ? data[k].join(', ') : data[k];
+      if (k === 'session' && data.sessionLabel) v = data.sessionLabel;
       lines.push(LABELS[k] + ': ' + v);
     });
     return lines.join('\n');
@@ -58,8 +60,11 @@
     return box;
   }
 
-  function success(form, type) {
-    var msg = type === 'jangnal'
+  function success(form, type, data) {
+    var notifyOnly = type === 'jangnal' && data && data.session === 'notify';
+    var msg = notifyOnly
+      ? '<h3>알림 신청을 받았습니다</h3><p>다음 장날 일정이 정해지면 문자로 알려 드립니다.</p>'
+      : type === 'jangnal'
       ? '<h3>장날 신청을 받았습니다</h3><p>장소와 시간을 문자로 다시 안내드립니다. 장날에서 뵙겠습니다.</p>'
       : '<h3>가입 신청서를 받았습니다</h3><p>웰컴 담당 운영진이 3일 안에 15분 화상 인터뷰 일정을 연락드립니다. 그 전에 <a href="/charter">상회 헌장</a>을 한 번 더 읽어 봐 주세요.</p>';
     showResult(form, msg);
@@ -122,7 +127,7 @@
         return res.json().catch(function () { return {}; }).then(function (body) { return { res: res, body: body }; });
       }).then(function (r) {
         clearTimeout(timer);
-        if (r.res.ok && r.body.ok) return success(form, data.type);
+        if (r.res.ok && r.body.ok) return success(form, data.type, data);
         if (r.res.status === 422) {
           submit.disabled = false; submit.textContent = label;
           err.textContent = '필수 항목이 비어 있습니다. 다시 확인해 주세요.';

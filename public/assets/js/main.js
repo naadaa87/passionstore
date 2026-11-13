@@ -74,7 +74,7 @@
       sessions.filter(function (s) { return s.status === 'open'; }).forEach(function (s, i) {
         var label = dateLabel(s.d) + ' ' + timeLabel(s.time) + (s.topic ? ', ' + s.topic : '');
         var opt = document.createElement('option');
-        opt.value = label; opt.textContent = label;
+        opt.value = s.date; opt.textContent = label;
         sel.insertBefore(opt, sel.firstChild);
         if (i === 0) opt.selected = true;
       });

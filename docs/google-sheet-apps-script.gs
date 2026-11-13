@@ -27,7 +27,7 @@ const FIELDS = {
     ['status', '처리 상태'], ['memo', '운영진 메모'], ['id', '접수 번호'],
   ],
   jangnal: [
-    ['receivedAt', '접수 시각'], ['session', '참가할 장날'], ['name', '이름'], ['phone', '휴대전화'],
+    ['receivedAt', '접수 시각'], ['sessionLabel', '참가할 장날'], ['name', '이름'], ['phone', '휴대전화'],
     ['email', '이메일'], ['work', '하는 일'], ['question', '이야기하고 싶은 고민'], ['source', '알게 된 경로'],
     ['consentPrivacy', '개인정보 동의'], ['status', '처리 상태'], ['memo', '운영진 메모'], ['id', '접수 번호'],
   ],

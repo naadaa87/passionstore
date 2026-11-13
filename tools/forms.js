@@ -78,7 +78,7 @@ const jangnalForm = `
               <div class="field"><label for="j-phone">휴대전화<span class="req" aria-hidden="true">*</span></label><input id="j-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="010-0000-0000" required></div>
               <div class="field"><label for="j-email">이메일</label><input id="j-email" name="email" type="email" autocomplete="email"></div>
               <div class="field"><label for="j-session">참가할 장날<span class="req" aria-hidden="true">*</span></label>
-                <select id="j-session" name="session" required data-jangnal-select><option value="다음 장날 알림만 받기">다음 장날 알림만 받기</option></select></div>
+                <select id="j-session" name="session" required data-jangnal-select><option value="notify">다음 장날 알림만 받기</option></select></div>
               <div class="field full"><label for="j-work">하는 일<span class="req" aria-hidden="true">*</span><span class="hint">예: 프리랜서 영상 편집 3년 차, 창업 준비 중</span></label><input id="j-work" name="work" type="text" required></div>
               <div class="field full"><label for="j-question">장날에서 이야기해 보고 싶은 고민<span class="hint">테이블 대화 주제를 정할 때 참고합니다.</span></label><textarea id="j-question" name="question" rows="2"></textarea></div>
               <div class="field"><label for="j-source">열정상회를 알게 된 경로</label><select id="j-source" name="source">

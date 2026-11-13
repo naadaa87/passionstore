@@ -619,6 +619,10 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .article-body hr { border: 0; border-top: 1px solid var(--rule); margin: 2.4em 0; }
 .note-box { margin: 2.4em 0 1.6em; padding: 22px 24px; border: 1px solid var(--rule-strong); border-left: 5px solid var(--brick); font-size: 16px; line-height: 1.75; }
 .note-box p { margin: 0; }
+.post-figure { margin: 2em 0; }
+.post-figure img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); }
+.post-figure figcaption { margin-top: 10px; font-size: 14px; line-height: 1.6; color: var(--ink-3); }
+.article-body p img { max-width: 100%; height: auto; vertical-align: middle; }
 .article-body > p:last-child, .article-body > ul:last-child { font-size: 15px; color: var(--ink-2); }
 
 /* ---------- 상회 용어 ---------- */

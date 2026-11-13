@@ -9,3 +9,13 @@
 
 /assets/js/site-config.js
   Cache-Control: no-cache
+
+/admin
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+  Referrer-Policy: same-origin
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+  Referrer-Policy: same-origin

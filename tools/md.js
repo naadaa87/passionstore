@@ -1,14 +1,19 @@
 // 상회보 글(마크다운)을 HTML로 바꾸는 작은 변환기. 외부 패키지 없이 동작합니다.
-// 지원: 앞머리(---), ## ### 제목, 문단, - 목록, 1. 목록, > 인용, **굵게**, [링크](주소), --- 구분선, :::note 상자
+// 지원: 앞머리(---), ## ### 제목, 문단, - 목록, 1. 목록, > 인용, **굵게**, [링크](주소), ![설명](이미지 주소), --- 구분선, :::note 상자
+// 이 파일은 관리자 화면의 미리보기에서도 그대로 씁니다(빌드할 때 public/admin/md.js로 복사).
 
 function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+const safeSrc = (src) => /^(\/|https:\/\/)/.test(src) && !/["'<>]/.test(src);
+
 function inline(s) {
   let out = esc(s);
+  out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (m, alt, src) => (safeSrc(src) ? `<img src="${src}" alt="${alt}" loading="lazy" decoding="async">` : alt));
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, text, href) => {
+    if (!/^(\/|#|https?:\/\/|mailto:|tel:)/.test(href)) return text;
     const ext = /^https?:\/\//.test(href);
     return `<a href="${href}"${ext ? ' rel="noopener"' : ''}>${text}</a>`;
   });
@@ -87,6 +92,14 @@ function toHtml(body) {
       continue;
     }
     if (/^---+$/.test(line)) { flushAll(); out.push('<hr>'); continue; }
+    if ((m = /^!\[([^\]]*)\]\(([^)\s]+)\)$/.exec(line.trim()))) {
+      flushAll();
+      if (safeSrc(m[2])) {
+        const alt = esc(m[1]);
+        out.push(`<figure class="post-figure"><img src="${esc(m[2])}" alt="${alt}" loading="lazy" decoding="async">${alt ? `<figcaption>${alt}</figcaption>` : ''}</figure>`);
+      }
+      continue;
+    }
     if ((m = /^>\s?(.*)$/.exec(line))) { flushPara(); flushList(); quote.push(m[1]); continue; }
     if ((m = /^[-*]\s+(.*)$/.exec(line))) {
       flushPara(); flushQuote();
@@ -113,6 +126,7 @@ function plainText(body) {
     .replace(/^:::.*$/gm, '')
     .replace(/^#{1,6}\s+/gm, '')
     .replace(/\*\*/g, '')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .replace(/^[>\-*]\s+/gm, '')
     .replace(/^\d+\.\s+/gm, '')
