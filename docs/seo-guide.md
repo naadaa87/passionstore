@@ -122,6 +122,7 @@ description: 검색 결과에 보일 설명. 핵심 키워드를 앞쪽에 넣�
 date: 2026-11-23
 category: 장사 이야기
 keywords: 첫 직원 채용, 자영업자 채용, 1인 사업자 직원
+image: packing
 ---
 본문 첫 문단...
 
@@ -139,6 +140,7 @@ keywords: 첫 직원 채용, 자영업자 채용, 1인 사업자 직원
 
 4. Commit changes를 누르면 1~2분 뒤 상회보 목록, 홈, 사이트맵, RSS에 자동으로 반영됩니다.
 5. 아직 공개하지 않을 글은 앞머리에 `draft: true`를 넣어 두세요.
+6. `image`는 글 머리와 상회보 목록, 공유 미리보기에 쓰는 대표 그림입니다. `tools/images.js`에 있는 그림 이름(`hanjan`, `stall`, `toolbox` 등)을 적거나, 관리자 화면에서 올린 사진 주소(`/assets/img/journal/...jpg`)를 적습니다. 직접 올린 사진이면 `imageAlt: 사진 설명`도 한 줄 넣어 주세요. 빼도 글은 올라갑니다.
 
 ### 좋은 글의 기준
 

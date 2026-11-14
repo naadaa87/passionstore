@@ -80,6 +80,7 @@ public/                      ← 배포되는 파일 (빌드 결과 + 이미지�
 functions/api/apply.js       ← 신청서 접수 (POST /api/apply)
 functions/api/admin/         ← 관리자 API (/api/admin/*)
 docs/admin-guide.md          ← 관리자 화면 설정과 사용법
+tools/images.js              ← 홈페이지 그림 목록(이름·설명)과 <img> 도우미
 docs/seo-guide.md            ← 검색 노출 운영 가이드
 docs/google-sheet-apps-script.gs ← 신청서를 구글 시트에 쌓는 스크립트
 ```
@@ -132,3 +133,13 @@ Cloudflare KV를 쓰려면 Bindings에 `APPLICATIONS`라는 이름으로 KV 네�
 - [ ] 실제로 가입·장날 신청을 한 번씩 보내 관리자 화면에 들어오는지 확인
 - [ ] 네이버 서치어드바이저·구글 서치 콘솔 등록, 사이트맵·RSS 제출
 - [ ] "열정상회" 상표 검색(KIPRIS 41류·35류)
+
+## 그림
+
+- 원본 PNG는 구글 드라이브 “열정상회 이미지” 폴더에 두고, 저장소에는 홈페이지용으로 줄인 파일만 둡니다.
+  - `public/assets/img/scenes/` 장면 그림(WebP, 폭 640·1024·원본 세 가지)
+  - `public/assets/img/og/` 페이지별 공유 미리보기(1200×630 JPG)
+  - `public/assets/img/icons/` 구조·방법·프로그램 아이콘(192px WebP)
+  - `public/assets/img/heads/` 홈 첫 화면 골목 배경, `textures/` 실행 장부 도장
+- 그림을 페이지에 넣을 때는 `tools/images.js`의 `scene('그림 이름')`을 씁니다. 화면 크기에 맞는 파일과 대체 글이 함께 들어갑니다.
+- 새 그림을 추가하려면 같은 규칙으로 WebP를 만든 뒤 `tools/images.js`의 목록에 이름과 설명을 한 줄 넣습니다.

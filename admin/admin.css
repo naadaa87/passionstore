@@ -352,3 +352,6 @@ dialog::backdrop { background: rgba(38, 34, 31, .38); }
   .ledger .n { font-size: 24px; }
   .bars li { grid-template-columns: 104px minmax(0, 1fr) 32px; }
 }
+
+.cover-preview { min-height: 38px; display: flex; align-items: center; }
+.cover-preview img { width: 100%; max-width: 220px; aspect-ratio: 3 / 2; object-fit: cover; border: 1px solid var(--rule); border-radius: 4px; background: #fff; }

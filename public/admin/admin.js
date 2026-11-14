@@ -1210,6 +1210,14 @@
 
   function slugOk(s) { return /^[a-z0-9][a-z0-9-]{1,60}$/.test(s); }
 
+  function coverOptions(current) {
+    var list = [['', '넣지 않음']];
+    var scenes = window.SCENES || {};
+    Object.keys(scenes).forEach(function (k) { list.push([k, '그림: ' + scenes[k]]); });
+    if (current && !scenes[current]) list.push([current, '올린 사진 (' + String(current).split('/').pop() + ')']);
+    return list;
+  }
+
   function viewPost(c, slug) {
     var isNew = slug === 'new';
     return Promise.all([isNew ? null : api('journal/' + enc(slug)), api('journal').catch(function () { return { items: [] }; })]).then(function (r) {
@@ -1228,6 +1236,9 @@
         fld('키워드', inp('keywords', meta.keywords, 'placeholder="첫 직원 채용, 자영업자 채용"'), { full: true, hint: '쉼표로 나눕니다. 첫 번째가 이 글이 노리는 말입니다.' }) +
         fld('쓴 날', inp('date', meta.date, 'type="date" required')) +
         fld('고친 날', inp('updated', meta.updated, 'type="date"'), { hint: '내용을 크게 고쳤을 때만 적습니다.' }) +
+        fld('대표 그림', sel('image', meta.image || '', coverOptions(meta.image)), { hint: '글 머리, 상회보 목록, 공유 미리보기에 나옵니다. <button type="button" class="link-btn" data-cover-upload>사진을 올려서 쓰기</button><input type="file" accept="image/jpeg,image/png,image/webp" data-cover-file hidden>' }) +
+        '<div class="field"><span class="lbl">대표 그림 미리보기</span><div class="cover-preview" data-cover></div></div>' +
+        fld('대표 사진 설명', inp('imageAlt', meta.imageAlt, 'placeholder="직접 올린 사진일 때 적습니다. 예: 가게 앞에서 찍은 간판"'), { full: true, hint: '그림 목록에서 고른 경우에는 비워 두어도 됩니다.' }) +
         '</div></form>';
       var editor = '<div class="editor" data-pane="write"><div class="pane-tabs" role="tablist"><button type="button" role="tab" aria-selected="true" data-pane-btn="write">쓰기</button><button type="button" role="tab" aria-selected="false" data-pane-btn="preview">미리보기</button></div>' +
         '<div class="write-pane"><div class="md-tools" role="toolbar" aria-label="글쓰기 도구">' +
@@ -1324,6 +1335,38 @@
         state.dirty = true;
         later();
       }
+      // 대표 그림
+      var coverSel = $('[name=image]', mf);
+      function drawCover() {
+        var val = coverSel.value;
+        var src = !val ? '' : (window.SCENES && window.SCENES[val]) ? '/assets/img/scenes/scene-' + val + '-640.webp' : (state.localImages[val] || val);
+        $('[data-cover]', v).innerHTML = src ? '<img src="' + h(src) + '" alt="">' : '<span class="muted">넣지 않음</span>';
+      }
+      coverSel.addEventListener('change', drawCover);
+      drawCover();
+      var coverFile = $('[data-cover-file]', v);
+      $('[data-cover-upload]', v).addEventListener('click', function () { coverFile.click(); });
+      coverFile.addEventListener('change', function () {
+        var file = coverFile.files && coverFile.files[0];
+        coverFile.value = '';
+        if (!file) return;
+        var s0 = isNew ? (readForm(mf).slug || '') : slug;
+        toast('사진을 줄이고 올리는 중입니다…');
+        prepareImage(file).then(function (img) {
+          return api('uploads', { method: 'POST', body: { data: img.base64, slug: slugOk(s0) ? s0 : 'journal' } }).then(function (res) {
+            state.localImages[res.url] = img.objectUrl;
+            var o = document.createElement('option');
+            o.value = res.url;
+            o.textContent = '올린 사진 (' + res.url.split('/').pop() + ')';
+            coverSel.appendChild(o);
+            coverSel.value = res.url;
+            state.dirty = true;
+            drawCover();
+            toast('대표 사진을 올렸습니다. 아래 “대표 사진 설명”도 적어 주세요.');
+          });
+        }).catch(fail);
+      });
+
       var fileInput = $('[data-file]', v);
       $$('[data-md]', v).forEach(function (b) {
         b.addEventListener('click', function () {
@@ -1368,7 +1411,7 @@
         var btn = $('[data-save]', v);
         busy(btn, '저장하는 중…', function () {
           return api('journal/' + enc(target), { method: 'PUT', body: {
-            meta: { title: m.title, description: m.description, date: m.date, updated: m.updated, category: m.category, keywords: m.keywords, order: meta.order || '', draft: draft },
+            meta: { title: m.title, description: m.description, date: m.date, updated: m.updated, category: m.category, keywords: m.keywords, order: meta.order || '', draft: draft, image: m.image, imageAlt: m.imageAlt },
             body: tx.value, sha: sha, isNew: isNew,
           } });
         }).then(function (res) {

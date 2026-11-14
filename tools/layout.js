@@ -114,13 +114,15 @@ function orgLd(site) {
 }
 
 /**
- * page({ path, title, desc, keywords, body, active, forms, graph, type, image, noindex })
+ * page({ path, title, desc, keywords, body, active, forms, graph, type, image, imageAlt, imageSize, noindex })
  * path: '/about' 처럼 사이트 안의 주소
  */
 function page(site, o) {
   const url = site.url + o.path;
   const fullTitle = o.titleFull || `${o.title} | 열정상회`;
   const image = site.url + (o.image || '/assets/img/og-image.png');
+  const imageAlt = o.imageAlt || '열정상회 간판 로고와 문구 업에 진심인 사람들의 모임';
+  const imageSize = o.imageSize === undefined ? [1200, 630] : o.imageSize;
   const v = site.verification || {};
   const verify = [
     v.naver && `<meta name="naver-site-verification" content="${esc(v.naver)}">`,
@@ -168,14 +170,15 @@ function page(site, o) {
   <meta property="og:description" content="${esc(o.desc)}">
   <meta property="og:url" content="${url}">
   <meta property="og:image" content="${image}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="열정상회 간판 로고와 문구 업에 진심인 사람들의 모임">
+  ${imageSize ? `<meta property="og:image:width" content="${imageSize[0]}">
+  <meta property="og:image:height" content="${imageSize[1]}">` : ''}
+  <meta property="og:image:alt" content="${esc(imageAlt)}">
   ${o.ogExtra || ''}
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${esc(fullTitle)}">
   <meta name="twitter:description" content="${esc(o.desc)}">
   <meta name="twitter:image" content="${image}">
+  <meta name="twitter:image:alt" content="${esc(imageAlt)}">
   <meta name="theme-color" content="#ffffff">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.ico" sizes="32x32">

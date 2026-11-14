@@ -12,6 +12,7 @@ const { page, breadcrumbs, breadcrumbLd } = require('./layout');
 const P = require('./pages');
 const personas = require('./personas');
 const faq = require('./faq');
+const { SCENES, postImage, postImageTag, sceneOg } = require('./images');
 
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'public');
@@ -73,6 +74,7 @@ const posts = fs.readdirSync(JOURNAL)
       category: meta.category || '상회보',
       keywords: meta.keywords || '',
       order: Number(meta.order || 0),
+      image: postImage(meta),
       html,
       toc,
       minutes: Math.max(2, Math.round(text.length / 500)),
@@ -94,7 +96,7 @@ const eventsLd = upcoming.map((s) => ({
   description: '사업자, 자영업자, 프리랜서가 함께하는 열정상회의 월간 공개 모임. 회원이 아니어도 손님으로 참여할 수 있습니다.',
   organizer: { '@type': 'Organization', name: '열정상회', url: site.url + '/' },
   url: site.url + '/jangnal',
-  image: site.url + '/assets/img/og-image.png',
+  image: site.url + sceneOg('jangnal-talk'),
 }));
 
 const ctx = { posts, personas, faq, eventsLd };
@@ -131,6 +133,7 @@ posts.forEach((post, i) => {
     keywords: post.keywords,
     active: '/journal/',
     ogType: 'article',
+    ...(post.image && post.image.og ? { image: post.image.og, imageAlt: post.image.alt, imageSize: post.image.ogSize } : {}),
     ogExtra: `<meta property="article:published_time" content="${post.date}T09:00:00+09:00">
   <meta property="article:modified_time" content="${post.updated}T09:00:00+09:00">
   <meta property="article:section" content="${esc(post.category)}">`,
@@ -147,7 +150,7 @@ posts.forEach((post, i) => {
         articleSection: post.category,
         keywords: post.keywords,
         mainEntityOfPage: site.url + post.path,
-        image: site.url + '/assets/img/og-image.png',
+        image: site.url + (post.image && post.image.og ? post.image.og : '/assets/img/og-image.png'),
         author: { '@type': 'Organization', name: '열정상회 상회보', url: site.url + '/journal/' },
         publisher: { '@id': site.url + '/#organization' },
         isPartOf: { '@type': 'Blog', name: '열정상회 상회보', url: site.url + '/journal/' },
@@ -155,12 +158,15 @@ posts.forEach((post, i) => {
     ],
     body: `
     <article class="article">
-      <header class="article-head">
+      <header class="article-head${post.image ? ' has-art' : ''}">
         <div class="wrap">
-          ${breadcrumbs(crumbs)}
-          <p class="post-meta"><span>${esc(post.category)}</span><time datetime="${post.date}">${P.fmtDate(post.date)}</time><span>${post.minutes}분 읽기</span></p>
-          <h1>${esc(post.title)}</h1>
-          <p class="lead">${esc(post.description)}</p>
+          <div class="page-head-text">
+            ${breadcrumbs(crumbs)}
+            <p class="post-meta"><span>${esc(post.category)}</span><time datetime="${post.date}">${P.fmtDate(post.date)}</time><span>${post.minutes}분 읽기</span></p>
+            <h1>${esc(post.title)}</h1>
+            <p class="lead">${esc(post.description)}</p>
+          </div>${post.image ? `
+          <div class="page-head-art">${postImageTag(post.image, { eager: true, sizes: '(min-width: 900px) 420px, 88vw' })}</div>` : ''}
         </div>
       </header>
       <div class="wrap article-layout">
@@ -272,6 +278,7 @@ adminFiles.forEach((f) => {
   if (f.endsWith('.html')) text = text.replace(/\{\{v\}\}/g, adminVersion);
   write(path.join('admin', f), text);
 });
+write('admin/scenes.js', `/* 자동 생성 파일입니다. 그림 목록은 tools/images.js에서 고치세요. 상회보 대표 그림 고르기에 씁니다. */\nwindow.SCENES = ${JSON.stringify(Object.fromEntries(Object.entries(SCENES).map(([k, v]) => [k, v.name])))};\n`);
 write('admin/md.js', `/* 자동 생성 파일입니다. 고칠 때는 tools/md.js를 고치세요. 관리자 화면의 상회보 미리보기에 씁니다. */\n(function () {\nvar module = { exports: {} };\n${mdSrc}\nwindow.MD = module.exports;\n})();\n`);
 
 console.log(`빌드 완료: 페이지 ${pages.length}개, 상회보 글 ${posts.length}편, 주소 ${site.url}`);

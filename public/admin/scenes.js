@@ -1,0 +1,2 @@
+/* 자동 생성 파일입니다. 그림 목록은 tools/images.js에서 고치세요. 상회보 대표 그림 고르기에 씁니다. */
+window.SCENES = {"shop-front":"상회 앞 대화","street-bench":"상회 앞 벤치","sangdan-hotseat":"상단 핫시트","sangdan-online":"온라인 상단","ledger-hand":"실행 장부","jangnal-talk":"장날 발표","jangnal-table":"장날 테이블 대화","sarangbang":"사랑방","pumasi":"품앗이","hakdang":"학당","gyeolsan":"결산의 밤","gaeeop":"개업식","giljabi":"길잡이","tambang":"가게 탐방","together":"같이 일하는 날","shimteo":"쉼터 산책","photo-workshop":"상품 사진 찍기","packing":"함께 포장하기","stall":"가판대","hanjan":"커피 두 잔","interview":"마주 앉은 대화","tea-tray":"찻쟁반","toolbox":"공구함","growing":"화분에 물 주기"};

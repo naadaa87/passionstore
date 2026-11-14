@@ -662,6 +662,8 @@ function serializePost(meta, body) {
   if (meta.order) lines.push(`order: ${parseInt(meta.order, 10) || 0}`);
   lines.push(`category: ${one(meta.category) || '상회보'}`);
   if (meta.keywords) lines.push(`keywords: ${one(meta.keywords)}`);
+  if (meta.image) lines.push(`image: ${one(meta.image)}`);
+  if (meta.image && meta.imageAlt) lines.push(`imageAlt: ${one(meta.imageAlt)}`);
   if (meta.draft) lines.push('draft: true');
   lines.push('---');
   return lines.join('\n') + '\n' + String(body || '').replace(/\r/g, '').trim() + '\n';
@@ -676,7 +678,7 @@ async function listPosts({ env }) {
     return {
       slug: f.name.replace(/\.md$/, ''), title: meta.title || f.name, date: meta.date || '', updated: meta.updated || '',
       category: meta.category || '', description: meta.description || '', keywords: meta.keywords || '',
-      draft: meta.draft === 'true', order: Number(meta.order || 0), length: body.replace(/\s+/g, '').length,
+      draft: meta.draft === 'true', order: Number(meta.order || 0), length: body.replace(/\s+/g, '').length, image: meta.image || '',
     };
   });
   items.sort((a, b) => b.date.localeCompare(a.date) || b.order - a.order);
@@ -702,6 +704,10 @@ async function putPost({ env, request, segs, admin, db }) {
   if (meta.updated && !isDate(meta.updated)) throw new HttpError(400, 'invalid', '수정일은 YYYY-MM-DD 형식으로 적어 주세요.');
   const body = String(b.body || '');
   if (body.trim().length < 20) throw new HttpError(400, 'invalid', '본문이 너무 짧습니다.');
+  const image = clip(meta.image, 200);
+  if (image && !/^[a-z][a-z-]{1,40}$/.test(image) && !/^\/assets\/img\/[\w./-]+\.(jpe?g|png|webp)$/i.test(image)) {
+    throw new HttpError(400, 'invalid', '대표 그림 값이 올바르지 않습니다.');
+  }
   const path = `content/journal/${slug}.md`;
   const existing = await readFile(env, path);
   if (b.isNew && existing) throw new HttpError(409, 'exists', '같은 주소의 글이 이미 있습니다. 다른 주소를 정해 주세요.');
@@ -709,6 +715,7 @@ async function putPost({ env, request, segs, admin, db }) {
   const text = serializePost({
     title: clip(meta.title, 120), description: clip(meta.description, 300), date: meta.date, updated: meta.updated || '',
     order: meta.order || '', category: clip(meta.category, 30), keywords: clip(meta.keywords, 300), draft: !!meta.draft,
+    image, imageAlt: clip(meta.imageAlt, 200),
   }, body);
   const r = await writeFile(env, path, text, existing ? existing.sha : undefined,
     `${existing ? '상회보 글 수정' : '상회보 글 추가'}: ${clip(meta.title, 60)}`, admin);

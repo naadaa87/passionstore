@@ -2,6 +2,12 @@
 const { esc } = require('./md');
 const { breadcrumbs, breadcrumbLd } = require('./layout');
 const { applyForm, jangnalForm } = require('./forms');
+const { scene, sceneOg, sceneAlt, icon, postImageTag } = require('./images');
+
+// 대상별 페이지와 홈 카드에 쓰는 그림
+const PERSONA_ART = { 'shop-owners': 'tambang', freelancers: 'together', founders: 'packing', ceos: 'photo-workshop' };
+const og = (key) => ({ image: sceneOg(key), imageAlt: sceneAlt(key) });
+const stamp = (kind, label, h) => `<img class="stamp-img" src="/assets/img/textures/stamp-${kind}.webp" width="280" height="${h}" alt="${label}" loading="lazy" decoding="async">`;
 
 const fmtDate = (s) => {
   const [y, m, d] = s.split('-').map(Number);
@@ -10,10 +16,13 @@ const fmtDate = (s) => {
 
 function postList(posts, headingLevel = 3) {
   return `<ul class="post-list">${posts.map((p) => `
-          <li>
-            <p class="post-meta"><span>${esc(p.category)}</span><time datetime="${p.date}">${fmtDate(p.date)}</time></p>
-            <h${headingLevel} class="post-title"><a href="${p.path}">${esc(p.title)}</a></h${headingLevel}>
-            <p class="post-summary">${esc(p.description)}</p>
+          <li${p.image ? ' class="has-thumb"' : ''}>${p.image ? `
+            <a class="post-thumb" href="${p.path}" tabindex="-1" aria-hidden="true">${postImageTag(p.image, { alt: '', cls: 'thumb', sizes: '(min-width: 760px) 220px, 100vw' })}</a>` : ''}
+            <div class="post-text">
+              <p class="post-meta"><span>${esc(p.category)}</span><time datetime="${p.date}">${fmtDate(p.date)}</time></p>
+              <h${headingLevel} class="post-title"><a href="${p.path}">${esc(p.title)}</a></h${headingLevel}>
+              <p class="post-summary">${esc(p.description)}</p>
+            </div>
           </li>`).join('')}
         </ul>`;
 }
@@ -44,7 +53,7 @@ function home(site, ctx) {
     keywords: '열정상회, 사업자 모임, 자영업자 모임, 프리랜서 모임, 사업자 커뮤니티, 창업자 모임, 소상공인 모임, 서울 사업자 모임',
     active: '/',
     body: `
-    <section class="hero">
+    <section class="hero hero-street">
       <div class="wrap">
         <div class="sign" role="img" aria-label="열정상회 간판">
           <span class="sign-board"><span class="sign-text" aria-hidden="true"><span>열</span><span>정</span><span>상</span><span>회</span></span></span>
@@ -93,7 +102,7 @@ function home(site, ctx) {
         <h2>이런 분들이 함께합니다</h2>
         <p class="lead">업종과 규모는 달라도 자기 업을 책임진다는 점은 같습니다. 서로 다른 일을 하는 사람이 한 상단에 모이기 때문에 경쟁 걱정 없이 숫자와 속사정을 꺼낼 수 있습니다.</p>
         <ul class="who-list">${ctx.personas.map((p) => `
-          <li><a href="/for/${p.slug}"><strong>${esc(p.card)}</strong><span>${esc(p.cardLine)}</span></a></li>`).join('')}
+          <li><a href="/for/${p.slug}"><span class="who-art">${scene(PERSONA_ART[p.slug], { alt: '', sizes: '(min-width: 900px) 250px, (min-width: 560px) 44vw, 90vw' })}</span><strong>${esc(p.card)}</strong><span>${esc(p.cardLine)}</span></a></li>`).join('')}
         </ul>
       </div>
     </section>
@@ -103,10 +112,10 @@ function home(site, ctx) {
         <h2>열정상회는 이렇게 돌아갑니다</h2>
         <p class="lead">입구는 가볍게, 안쪽은 깊게 만들었습니다. 기수 없이 연중 언제든 들어올 수 있고, 들어오면 바로 기존 회원과 섞입니다.</p>
         <ol class="path">
-          <li><span class="path-no">처음</span><h3>장날</h3><p class="path-meta">한 달에 한 번 열리는 90분 공개 모임</p><p>누구나 손님으로 올 수 있습니다. 회원 두 명의 6분 발표와 테이블 대화로 열정상회의 분위기를 먼저 겪어 봅니다.</p></li>
-          <li><span class="path-no">함께</span><h3>상단</h3><p class="path-meta">6~8명이 격주로 만나는 작은 모임</p><p>열정상회의 중심입니다. 서로의 고민을 깊게 다루고, 해 보기로 한 일을 장부에 적습니다.</p></li>
-          <li><span class="path-no">매일</span><h3>사랑방</h3><p class="path-meta">사업자 확인을 거친 온라인 공간</p><p>모임이 없는 날에도 질문을 올리고, 품앗이판에서 도움을 주고받습니다.</p></li>
-          <li><span class="path-no">오래</span><h3>단골</h3><p class="path-meta">1년 넘게 함께한 상회원</p><p>길잡이가 되어 새로 들어온 회원의 첫 3개월을 챙깁니다.</p></li>
+          <li>${icon('icon-jangnal', 64)}<span class="path-no">처음</span><h3>장날</h3><p class="path-meta">한 달에 한 번 열리는 90분 공개 모임</p><p>누구나 손님으로 올 수 있습니다. 회원 두 명의 6분 발표와 테이블 대화로 열정상회의 분위기를 먼저 겪어 봅니다.</p></li>
+          <li>${icon('icon-sangdan', 64)}<span class="path-no">함께</span><h3>상단</h3><p class="path-meta">6~8명이 격주로 만나는 작은 모임</p><p>열정상회의 중심입니다. 서로의 고민을 깊게 다루고, 해 보기로 한 일을 장부에 적습니다.</p></li>
+          <li>${icon('icon-sarangbang', 64)}<span class="path-no">매일</span><h3>사랑방</h3><p class="path-meta">사업자 확인을 거친 온라인 공간</p><p>모임이 없는 날에도 질문을 올리고, 품앗이판에서 도움을 주고받습니다.</p></li>
+          <li>${icon('icon-dangol', 64)}<span class="path-no">오래</span><h3>단골</h3><p class="path-meta">1년 넘게 함께한 상회원</p><p>길잡이가 되어 새로 들어온 회원의 첫 3개월을 챙깁니다.</p></li>
         </ol>
       </div>
     </section>
@@ -118,6 +127,7 @@ function home(site, ctx) {
           <p>상단(商團)은 6~8명이 격주로 만나는 작은 모임입니다. 같은 상권의 같은 업종은 한 상단에 넣지 않고, 비슷한 단계의 사람과 한 걸음 앞선 사람을 함께 묶습니다.</p>
           <p>한 번 모일 때 두 사람이 자기 고민을 깊게 꺼냅니다. 이것을 핫시트라고 부릅니다. 질문을 먼저 충분히 하고, 조언 대신 “나는 이렇게 해 봤고 결과는 이랬다”로 경험을 나눕니다.</p>
           <a class="text-link" href="/journal/hot-seat">핫시트 진행법 읽기</a>
+          <div class="col-art">${scene('sangdan-hotseat', { sizes: '(min-width: 900px) 440px, 100vw' })}</div>
         </div>
         <ol class="timeline" aria-label="대면 상단 120분 진행 순서">
           <li><time>0:00</time><strong>체크인</strong><span>지난 모임에서 한 약속의 결과를 한 사람씩 짧게 말합니다.</span></li>
@@ -131,16 +141,21 @@ function home(site, ctx) {
 
     <section class="section" id="ledger">
       <div class="wrap">
-        <h2>말로 끝나지 않게, 실행 장부</h2>
-        <p class="lead">상단에서 한 약속은 장부에 적고 다음 모임에서 결과를 말합니다. 못 한 약속도 그대로 적습니다. 1년이 지나면 이 장부가 그 사람의 한 해 기록이 됩니다.</p>
+        <div class="sec-head">
+          <div>
+            <h2>말로 끝나지 않게, 실행 장부</h2>
+            <p class="lead">상단에서 한 약속은 장부에 적고 다음 모임에서 결과를 말합니다. 못 한 약속도 그대로 적습니다. 1년이 지나면 이 장부가 그 사람의 한 해 기록이 됩니다.</p>
+          </div>
+          <div class="sec-art">${scene('ledger-hand', { sizes: '(min-width: 900px) 400px, 100vw' })}</div>
+        </div>
         <figure class="ledger">
           <figcaption>장부 예시: 동네 카페를 운영하는 상회원의 석 달</figcaption>
           <table>
             <thead><tr><th scope="col">모임</th><th scope="col">약속</th><th scope="col">결과</th><th scope="col">메모</th></tr></thead>
             <tbody>
-              <tr><td>9월 둘째 주</td><td>세트 메뉴 가격을 2,000원 올려 2주 동안 팔아 본다</td><td><span class="stamp done">했다</span></td><td>주문 수는 거의 그대로</td></tr>
-              <tr><td>9월 넷째 주</td><td>원두 거래처 두 곳에 결제 조건 조정을 요청한다</td><td><span class="stamp changed">바뀌었다</span></td><td>한 곳은 다음 달로 미룸</td></tr>
-              <tr><td>10월 둘째 주</td><td>배달앱 메뉴 사진을 다시 찍는다</td><td><span class="stamp missed">못 했다</span></td><td>다음 모임까지 다시 약속</td></tr>
+              <tr><td>9월 둘째 주</td><td>세트 메뉴 가격을 2,000원 올려 2주 동안 팔아 본다</td><td>${stamp('done', '했다', 146)}</td><td>주문 수는 거의 그대로</td></tr>
+              <tr><td>9월 넷째 주</td><td>원두 거래처 두 곳에 결제 조건 조정을 요청한다</td><td>${stamp('changed', '바뀌었다', 143)}</td><td>한 곳은 다음 달로 미룸</td></tr>
+              <tr><td>10월 둘째 주</td><td>배달앱 메뉴 사진을 다시 찍는다</td><td>${stamp('missed', '못 했다', 146)}</td><td>다음 모임까지 다시 약속</td></tr>
             </tbody>
           </table>
         </figure>
@@ -166,28 +181,33 @@ function home(site, ctx) {
       <div class="wrap">
         <h2>함께하는 다섯 가지 방법</h2>
         <div class="axes">
-          <div><h3>만나기</h3><p class="axis-line">명함보다 대화가 먼저인 만남</p><p class="axis-items">장날, 한잔 매칭, 가게 탐방, 같이 일하는 날</p></div>
-          <div><h3>돕기</h3><p class="axis-line">막힌 일을 같이 푸는 자리</p><p class="axis-items">상단, 사랑방, 품앗이판, 상담소</p></div>
-          <div><h3>배우기</h3><p class="axis-line">회원이 회원에게 배우는 4주</p><p class="axis-items">학당, 상회보</p></div>
-          <div><h3>도전하기</h3><p class="axis-line">공개하고 30일 동안 해 보기</p><p class="axis-items">도전장, 결산의 밤</p></div>
-          <div><h3>쉬어 가기</h3><p class="axis-line">일을 내려놓는 시간도 필요하니까</p><p class="axis-items">쉼터 모임</p></div>
+          <div>${icon('icon-way-meet', 56)}<h3>만나기</h3><p class="axis-line">명함보다 대화가 먼저인 만남</p><p class="axis-items">장날, 한잔 매칭, 가게 탐방, 같이 일하는 날</p></div>
+          <div>${icon('icon-way-help', 56)}<h3>돕기</h3><p class="axis-line">막힌 일을 같이 푸는 자리</p><p class="axis-items">상단, 사랑방, 품앗이판, 상담소</p></div>
+          <div>${icon('icon-way-learn', 56)}<h3>배우기</h3><p class="axis-line">회원이 회원에게 배우는 4주</p><p class="axis-items">학당, 상회보</p></div>
+          <div>${icon('icon-way-challenge', 56)}<h3>도전하기</h3><p class="axis-line">공개하고 30일 동안 해 보기</p><p class="axis-items">도전장, 결산의 밤</p></div>
+          <div>${icon('icon-way-rest', 56)}<h3>쉬어 가기</h3><p class="axis-line">일을 내려놓는 시간도 필요하니까</p><p class="axis-items">쉼터 모임</p></div>
         </div>
         <a class="text-link" href="/programs">프로그램 전체 보기</a>
       </div>
     </section>
 
     <section class="section alt">
-      <div class="wrap"><div class="story-inner">
-        <h2>주인이 바뀌어도 간판은 그대로</h2>
-        <p>동네마다 오래된 상회가 하나씩 있었습니다. 주인이 바뀌어도 간판은 그대로였고, 동네 사람들은 그 앞에서 소식을 나누고 서로의 안부를 물었습니다.</p>
-        <p>열정상회도 그런 곳이 되려고 합니다. 회장이 중심을 잡고 운영진이 일을 나눠 맡지만, 모임의 얼굴은 회원입니다. 장날 무대에는 회원이 서고, 돈과 규칙은 모두에게 공개합니다.</p>
+      <div class="wrap">
+        <div class="sec-head sec-head-story">
+          <div class="story-inner">
+            <h2>주인이 바뀌어도 간판은 그대로</h2>
+            <p>동네마다 오래된 상회가 하나씩 있었습니다. 주인이 바뀌어도 간판은 그대로였고, 동네 사람들은 그 앞에서 소식을 나누고 서로의 안부를 물었습니다.</p>
+            <p>열정상회도 그런 곳이 되려고 합니다. 회장이 중심을 잡고 운영진이 일을 나눠 맡지만, 모임의 얼굴은 회원입니다. 장날 무대에는 회원이 서고, 돈과 규칙은 모두에게 공개합니다.</p>
+          </div>
+          <div class="sec-art">${scene('street-bench', { sizes: '(min-width: 900px) 520px, 100vw' })}</div>
+        </div>
         <div class="roles-mini">
           <div><h3>회장</h3><p>모임의 방향을 잡고 밖에서 열정상회를 대표합니다.</p></div>
           <div><h3>운영진</h3><p>공개 모집으로 뽑혀 상단, 프로그램, 가입, 홍보, 회계를 나눠 맡습니다.</p></div>
           <div><h3>회원</h3><p>장날 진행과 발표, 상단장, 학당장, 길잡이를 돌아가며 맡습니다.</p></div>
         </div>
         <a class="text-link" href="/about#operation">운영 방식 보기</a>
-      </div></div>
+      </div>
     </section>
 
     <section class="section">
@@ -222,14 +242,17 @@ function home(site, ctx) {
 }
 
 /* ---------------- 하위 페이지 머리 ---------------- */
-function head(h1, lead, crumbs, nav) {
+function head(h1, lead, crumbs, nav, art) {
   return `
-    <section class="page-head">
+    <section class="page-head${art ? ' has-art' : ''}">
       <div class="wrap">
-        ${breadcrumbs(crumbs)}
-        <h1>${h1}</h1>
-        <p class="lead">${lead}</p>${nav ? `
-        <nav class="page-nav" aria-label="이 페이지 안에서">${nav.map(([id, t]) => `<a href="#${id}">${t}</a>`).join('')}</nav>` : ''}
+        <div class="page-head-text">
+          ${breadcrumbs(crumbs)}
+          <h1>${h1}</h1>
+          <p class="lead">${lead}</p>${nav ? `
+          <nav class="page-nav" aria-label="이 페이지 안에서">${nav.map(([id, t]) => `<a href="#${id}">${t}</a>`).join('')}</nav>` : ''}
+        </div>${art ? `
+        <div class="page-head-art">${scene(art, { eager: true, sizes: '(min-width: 900px) 440px, 88vw' })}</div>` : ''}
       </div>
     </section>`;
 }
@@ -245,9 +268,10 @@ function about(site) {
     keywords: '열정상회 소개, 사업자 커뮤니티, 사업자 모임 운영, 열정상회 운영진, 熱情商會',
     active: '/about',
     pageType: 'AboutPage',
+    ...og('shop-front'),
     graph: [breadcrumbLd(site, crumbs)],
     body: `${head('열정상회를 소개합니다', '자기 업을 책임지는 사람들이 모여 서로 돕고, 같이 공부하고, 함께 도전하는 사업자 커뮤니티입니다.', crumbs,
-      [['why', '만든 이유'], ['name', '이름의 뜻'], ['mission', '미션과 가치'], ['operation', '운영 방식'], ['money', '회비 쓰는 법'], ['words', '상회 용어']])}
+      [['why', '만든 이유'], ['name', '이름의 뜻'], ['mission', '미션과 가치'], ['operation', '운영 방식'], ['money', '회비 쓰는 법'], ['words', '상회 용어']], 'shop-front')}
 
     <section class="section" id="why">
       <div class="wrap split">
@@ -367,8 +391,13 @@ function about(site) {
 
     <section class="section" id="money">
       <div class="wrap">
-        <h2>회비는 이렇게 씁니다</h2>
-        <p class="lead">열정상회는 회원이 낸 회비로 운영하고, 남는 돈은 다시 모임에 씁니다. 특정인의 지원이나 다른 사업의 수익에 기대지 않습니다.</p>
+        <div class="sec-head">
+          <div>
+            <h2>회비는 이렇게 씁니다</h2>
+            <p class="lead">열정상회는 회원이 낸 회비로 운영하고, 남는 돈은 다시 모임에 씁니다. 특정인의 지원이나 다른 사업의 수익에 기대지 않습니다.</p>
+          </div>
+          <div class="sec-art">${scene('gyeolsan', { sizes: '(min-width: 900px) 400px, 100vw' })}</div>
+        </div>
         <div class="two-col prose">
           <div>
             <h3>들어오는 돈과 나가는 돈</h3>
@@ -421,7 +450,11 @@ function about(site) {
 function programs(site) {
   const crumbs = [['홈', '/'], ['프로그램', '/programs']];
   const prog = (id, name, desc, cycle, who, tag) =>
-    `<li id="${id}"><div class="p-name">${name}${tag ? `<span class="tag">${tag}</span>` : ''}</div><div class="p-desc">${desc}</div><div class="p-meta"><b>${cycle}</b>${who}</div></li>`;
+    `<li id="${id}"><div class="p-name">${icon('icon-' + id, 44)}<span>${name}${tag ? `<span class="tag">${tag}</span>` : ''}</span></div><div class="p-desc">${desc}</div><div class="p-meta"><b>${cycle}</b>${who}</div></li>`;
+  const core = (id, art, name, desc, cycle, who) =>
+    `<li id="${id}">${scene(art, { sizes: '(min-width: 900px) 340px, 100vw' })}<h4 class="p-name">${name}</h4><p class="p-desc">${desc}</p><p class="p-meta"><b>${cycle}</b>${who}</p></li>`;
+  const groupHead = (title, text, art) =>
+    `<div class="pg-head"><div><h3>${title}</h3><p>${text}</p></div>${scene(art, { sizes: '(min-width: 760px) 240px, 100vw', alt: '' })}</div>`;
   const LATER = '순차 오픈';
   return {
     path: '/programs',
@@ -430,9 +463,10 @@ function programs(site) {
     desc: '열정상회의 사업자 소그룹 상단, 공개 모임 장날, 온라인 사랑방, 회원이 이끄는 학당, 전문가 상담소, 30일 도전장까지. 프로그램 구성과 상단 운영 방식, 1년의 흐름을 안내합니다.',
     keywords: '사업자 소그룹, 사업자 스터디, 자영업자 스터디, 사업자 네트워킹 프로그램, 마스터마인드, 핫시트',
     active: '/programs',
+    ...og('hakdang'),
     graph: [breadcrumbLd(site, crumbs)],
     body: `${head('프로그램', '처음에는 핵심 프로그램으로 시작하고, 맡을 회원이 생기는 대로 하나씩 늘려 갑니다. “순차 오픈” 표시가 있는 프로그램은 개업 뒤 몇 달 안에 차례로 엽니다.', crumbs,
-      [['list', '전체 프로그램'], ['sangdan', '상단 자세히'], ['year', '1년의 흐름']])}
+      [['list', '전체 프로그램'], ['sangdan', '상단 자세히'], ['year', '1년의 흐름']], 'hakdang')}
 
     <section class="section" id="list">
       <div class="wrap">
@@ -441,16 +475,15 @@ function programs(site) {
         <div class="program-group">
           <h3>중심이 되는 세 가지</h3>
           <p>열정상회의 뼈대입니다. 이 셋만으로도 한 해가 돌아갑니다.</p>
-          <ul class="programs">
-            ${prog('p-sangdan', '상단', '6~8명 비경쟁 소그룹. 핫시트로 고민을 풀고 실행 장부를 점검합니다.', '격주, 대면 120분과 온라인 90분을 번갈아', '상단장 진행')}
-            ${prog('p-jangnal', '장날', '회원 두 명의 6분 발표와 질의, 그달의 주제 이야기, 테이블 대화. 손님도 참여합니다.', '월 1회, 90분', '장날 MC(매달 다른 회원)')}
-            ${prog('p-sarangbang', '사랑방', '사업자 확인을 거친 사람만 들어오는 온라인 공간. 질문 게시판, 업종·지역 채널, 자료실이 있습니다.', '상시', '운영진 관리')}
+          <ul class="programs-core">
+            ${core('p-sangdan', 'sangdan-hotseat', '상단', '6~8명 비경쟁 소그룹. 핫시트로 고민을 풀고 실행 장부를 점검합니다.', '격주, 대면 120분과 온라인 90분을 번갈아', '상단장 진행')}
+            ${core('p-jangnal', 'jangnal-talk', '장날', '회원 두 명의 6분 발표와 질의, 그달의 주제 이야기, 테이블 대화. 손님도 참여합니다.', '월 1회, 90분', '장날 MC(매달 다른 회원)')}
+            ${core('p-sarangbang', 'sarangbang', '사랑방', '사업자 확인을 거친 사람만 들어오는 온라인 공간. 질문 게시판, 업종·지역 채널, 자료실이 있습니다.', '상시', '운영진 관리')}
           </ul>
         </div>
 
         <div class="program-group">
-          <h3>돕고 배우기</h3>
-          <p>회원이 가진 경험이 가장 좋은 교재입니다.</p>
+          ${groupHead('돕고 배우기', '회원이 가진 경험이 가장 좋은 교재입니다.', 'pumasi')}
           <ul class="programs">
             ${prog('p-pumasi', '품앗이판', '“도와줄 수 있는 것”과 “필요한 것”을 올리고 연결합니다. 상세페이지 피드백, 견적서 검토, 거래처 소개 같은 일들입니다.', '상시, 월 1회 정리', '웰컴 담당')}
             ${prog('p-hakdang', '학당', '회원이 이끄는 4주 공부 모임. AI 업무 자동화, 세무 기초, 가격 정하기, 정책자금 신청서 같은 주제를 다룹니다.', '분기마다 2~4개 개강', '학당장')}
@@ -460,8 +493,7 @@ function programs(site) {
         </div>
 
         <div class="program-group">
-          <h3>도전하기</h3>
-          <p>공개하면 끝까지 가게 됩니다.</p>
+          ${groupHead('도전하기', '공개하면 끝까지 가게 됩니다.', 'growing')}
           <ul class="programs">
             ${prog('p-dojeonjang', '도전장', '목표 하나를 공개하고 30일 동안 매주 점검합니다. 신규 고객 10명, 가격 인상 실험 같은 목표입니다.', '분기 1회, 주 1회 체크인', '프로그램 담당', LATER)}
             ${prog('p-gyeolsan', '결산의 밤', '한 해의 실행 장부와 배운 점을 나누는 연말 모임. 결산을 보고하는 정기총회를 겸합니다.', '연 1회, 12월', '운영진')}
@@ -469,8 +501,7 @@ function programs(site) {
         </div>
 
         <div class="program-group">
-          <h3>만나기</h3>
-          <p>명함을 돌리는 대신 서로의 일을 들여다봅니다.</p>
+          ${groupHead('만나기', '명함을 돌리는 대신 서로의 일을 들여다봅니다.', 'gaeeop')}
           <ul class="programs">
             ${prog('p-gaeeop', '개업식', '그달 새로 들어온 상회원을 맞는 자리. 목표 하나와 도울 수 있는 것 하나를 말하고 상단장과 길잡이를 만납니다.', '월 1회, 장날 직전 60분', '웰컴 담당')}
             ${prog('p-hanjan', '한잔 매칭', '다른 상단 회원과 1:1 커피 대화를 짝지어 드립니다.', '월 1회', '운영진', LATER)}
@@ -481,8 +512,7 @@ function programs(site) {
         </div>
 
         <div class="program-group">
-          <h3>쉬어 가기</h3>
-          <p>오래 하려면 쉬는 법도 같이 챙겨야 합니다.</p>
+          ${groupHead('쉬어 가기', '오래 하려면 쉬는 법도 같이 챙겨야 합니다.', 'shimteo')}
           <ul class="programs">
             ${prog('p-shimteo', '쉼터 모임', '걷기, 운동, 조용한 저녁처럼 쉬기 위한 모임입니다. 전문 상담이 필요하면 외부 기관을 안내합니다.', '월 1회', '자원 회원', LATER)}
           </ul>
@@ -492,8 +522,13 @@ function programs(site) {
 
     <section class="section alt" id="sangdan">
       <div class="wrap">
-        <h2>상단 자세히</h2>
-        <p class="lead">상단은 끝나는 날이 없는 상설 소그룹입니다. 격주로 만나 한 번에 두 사람씩 핫시트를 하면, 8명 상단 기준으로 두 달에 한 번 자기 차례가 돌아옵니다.</p>
+        <div class="sec-head">
+          <div>
+            <h2>상단 자세히</h2>
+            <p class="lead">상단은 끝나는 날이 없는 상설 소그룹입니다. 격주로 만나 한 번에 두 사람씩 핫시트를 하면, 8명 상단 기준으로 두 달에 한 번 자기 차례가 돌아옵니다.</p>
+          </div>
+          <div class="sec-art">${scene('sangdan-online', { sizes: '(min-width: 900px) 400px, 100vw' })}</div>
+        </div>
         <div class="two-col prose">
           <div>
             <h3>상단을 꾸리는 원칙</h3>
@@ -600,9 +635,10 @@ function jangnal(site, ctx) {
     keywords: '사업자 네트워킹 모임, 서울 사업자 모임, 자영업자 오프라인 모임, 프리랜서 네트워킹, 창업자 네트워킹 행사',
     active: '/jangnal',
     forms: true,
+    ...og('jangnal-talk'),
     graph: [breadcrumbLd(site, crumbs), ...ctx.eventsLd],
     body: `${head('장날', '한 달에 한 번 열리는 열정상회의 공개 모임입니다. 회원이 아니어도 손님으로 올 수 있습니다. 명함 대신 요즘 하는 고민 하나를 가져오세요.', crumbs,
-      [['schedule', '일정'], ['flow', '진행 순서'], ['guest', '손님 안내'], ['apply', '참가 신청']])}
+      [['schedule', '일정'], ['flow', '진행 순서'], ['guest', '손님 안내'], ['apply', '참가 신청']], 'jangnal-talk')}
 
     <section class="section" id="schedule">
       <div class="wrap">
@@ -619,6 +655,7 @@ function jangnal(site, ctx) {
           <h2>90분은 이렇게 흘러갑니다</h2>
           <p>장날에는 아무도 팔지 않습니다. 회원 두 명이 지금 하는 일과 최근의 고민, 그리고 해 본 것을 6분 동안 이야기하고, 나머지는 테이블에 둘러앉아 대화합니다.</p>
           <p>테이블마다 상회원이 한 명씩 앉아 처음 온 분이 어색하지 않게 돕습니다. 서울에서 열리며, 장소는 회원 공간과 제휴 공간을 돌아가며 씁니다.</p>
+          <div class="col-art">${scene('jangnal-table', { sizes: '(min-width: 900px) 440px, 100vw' })}</div>
         </div>
         <ol class="timeline" aria-label="장날 90분 진행 순서">
           <li><time>0:00</time><strong>입장</strong><span>명찰을 받고 상회원이 있는 테이블에 앉습니다.</span></li>
@@ -670,9 +707,10 @@ function join(site, ctx) {
     keywords: '사업자 모임 가입, 자영업자 모임 가입, 열정상회 회비, 사업자 커뮤니티 가입 방법',
     active: '/join',
     forms: true,
+    ...og('gaeeop'),
     graph: [breadcrumbLd(site, crumbs)],
     body: `${head('가입 안내', '열정상회는 이미 자기 업을 하고 있는 사람들의 모임입니다. 가입은 연중 언제든 받고, 들어오면 그달 개업식에서 상단장과 길잡이를 만납니다.', crumbs,
-      [['who', '누가 함께하나요'], ['fees', '회원 구분과 회비'], ['steps', '가입 절차'], ['faq', '자주 묻는 질문'], ['apply', '신청서']])}
+      [['who', '누가 함께하나요'], ['fees', '회원 구분과 회비'], ['steps', '가입 절차'], ['faq', '자주 묻는 질문'], ['apply', '신청서']], 'gaeeop')}
 
     <section class="section" id="who">
       <div class="wrap">
@@ -721,6 +759,7 @@ function join(site, ctx) {
     <section class="section" id="steps">
       <div class="wrap">
         <h2>가입 절차</h2>
+        <div class="steps-art">
         <ol class="steps">
           <li><strong>장날이나 상회보로 먼저 만나기</strong><span>필수는 아니지만, 분위기를 먼저 겪어 보시길 권합니다.</span></li>
           <li><strong>신청서 보내기</strong><span>하는 일, 지금의 고민, 도울 수 있는 것, 가능한 시간대를 적습니다.</span></li>
@@ -729,6 +768,8 @@ function join(site, ctx) {
           <li><strong>서약과 결제</strong><span>상회 헌장에 서약하고, 환불 기준을 확인한 뒤 결제합니다.</span></li>
           <li><strong>개업식</strong><span>그달 개업식에서 상단장과 길잡이를 만나고, 첫 상단 날짜를 안내받습니다.</span></li>
         </ol>
+        <div class="col-art">${scene('giljabi', { sizes: '(min-width: 900px) 380px, 100vw' })}</div>
+        </div>
         <div class="two-col prose">
           <div>
             <h3>환불과 해지</h3>
@@ -838,9 +879,10 @@ function faqPage(site, ctx) {
     desc: '열정상회에 관해 자주 묻는 질문. 누가 가입할 수 있는지, 회비와 환불, 상단 배정 방식, 장날 참여, 영업 금지 규칙과 회비 공개 원칙까지 한곳에 모았습니다.',
     keywords: '사업자 모임 가입 조건, 자영업자 모임 회비, 프리랜서 모임 가입, 사업자 커뮤니티 질문',
     active: '/faq',
+    ...og('tea-tray'),
     graph: [breadcrumbLd(site, crumbs), faqLd(all)],
     body: `${head('자주 묻는 질문', '가입 전에 많이 묻는 내용을 모았습니다. 여기 없는 질문은 장날에 직접 물어보셔도 좋습니다.', crumbs,
-      ctx.faq.map((g, i) => [`faq-${i + 1}`, g.group]))}
+      ctx.faq.map((g, i) => [`faq-${i + 1}`, g.group]), 'tea-tray')}
 ${ctx.faq.map((g, i) => `
     <section class="section${i % 2 ? ' alt' : ''}" id="faq-${i + 1}">
       <div class="wrap">
@@ -875,8 +917,9 @@ function persona(site, ctx, p) {
     desc: p.desc,
     keywords: p.keywords,
     active: '',
+    ...og(PERSONA_ART[p.slug]),
     graph: [breadcrumbLd(site, crumbs), faqLd(p.faq)],
-    body: `${head(esc(p.h1), esc(p.lead), crumbs)}
+    body: `${head(esc(p.h1), esc(p.lead), crumbs, null, PERSONA_ART[p.slug])}
 
     <section class="section">
       <div class="wrap split">
@@ -957,11 +1000,12 @@ function journalIndex(site, ctx) {
     keywords: '상회보, 자영업자 칼럼, 사업자 글, 프리랜서 팁, 소상공인 정보, 사업 운영 노하우',
     active: '/journal/',
     pageType: 'CollectionPage',
+    ...og('interview'),
     graph: [
       breadcrumbLd(site, crumbs),
       { '@type': 'ItemList', itemListElement: ctx.posts.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: site.url + p.path, name: p.title })) },
     ],
-    body: `${head('상회보', '업을 하는 사람에게 필요한 이야기를 씁니다. 상단에서 자주 나오는 고민과, 혼자서는 찾기 어려운 정보를 정리합니다.', crumbs)}
+    body: `${head('상회보', '업을 하는 사람에게 필요한 이야기를 씁니다. 상단에서 자주 나오는 고민과, 혼자서는 찾기 어려운 정보를 정리합니다.', crumbs, null, 'interview')}
 
     <section class="section">
       <div class="wrap">
@@ -1036,6 +1080,7 @@ function notFound() {
         <h1 class="hero-tagline">찾으시는 페이지가 없습니다</h1>
         <p class="hero-desc">주소가 바뀌었거나 없어진 페이지입니다. 아래에서 다시 찾아 주세요.</p>
         <div class="actions center"><a class="btn btn-primary" href="/">처음으로 가기</a><a class="btn btn-ghost" href="/journal/">상회보 보기</a></div>
+        <div class="notfound-art">${scene('giljabi', { alt: '', sizes: '(min-width: 700px) 520px, 90vw' })}</div>
       </div>
     </section>
 `,
