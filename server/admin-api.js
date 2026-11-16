@@ -600,7 +600,7 @@ function validateSection(section, v) {
     case 'verification': return { naver: str(v.naver, 120), google: str(v.google, 120), bing: str(v.bing, 120), daumRobotsLine: str(v.daumRobotsLine, 200) };
     case 'url': {
       const u = str(v, 200).replace(/\/+$/, '');
-      if (!/^https:\/\/[a-z0-9.-]+\.[a-z]{2,}$/i.test(u)) throw new HttpError(400, 'invalid', '사이트 주소는 https://로 시작하는 도메인만 적어 주세요. 예: https://passionstore.pages.dev');
+      if (!/^https:\/\/[a-z0-9.-]+\.[a-z]{2,}$/i.test(u)) throw new HttpError(400, 'invalid', '사이트 주소는 https://로 시작하는 도메인만 적어 주세요. 예: https://passionstore.kr');
       return u;
     }
     case 'team': {

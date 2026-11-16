@@ -1,13 +1,13 @@
 {
   "_설명": "열정상회 홈페이지 설정 파일입니다. 고친 뒤 Commit changes를 누르면 Cloudflare가 다시 빌드합니다. 큰따옴표와 쉼표를 지우지 않도록 조심하세요.",
 
-  "url": "https://passionstore.pages.dev",
+  "url": "https://passionstore.kr",
   "name": "열정상회",
-  "updated": "2026-11-09",
+  "updated": "2026-11-16",
 
   "verification": {
     "_설명": "검색엔진에서 받은 소유확인 코드를 넣습니다. 네이버·구글·빙은 content 값만, 다음은 robots.txt에 넣으라는 한 줄 전체를 넣습니다.",
-    "naver": "",
+    "naver": "836cd072acb23ffd4d5d7c14effb8afbb692a12f",
     "google": "",
     "bing": "",
     "daumRobotsLine": ""

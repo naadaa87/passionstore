@@ -98,7 +98,7 @@ Bing Webmaster Tools는 구글 서치 콘솔에서 가져오기를 쓰면 따로
 ## 3. 정식 도메인을 연결할 때
 
 1. Cloudflare Pages 프로젝트 → Custom domains에서 도메인을 연결합니다.
-2. `site.json`의 `"url"`을 새 주소로 바꿉니다. (예: `"https://yeoljeongsanghoe.kr"`) 끝에 `/`는 붙이지 않습니다.
+2. `site.json`의 `"url"`을 새 주소로 바꿉니다. (예: `"https://passionstore.kr"`) 끝에 `/`는 붙이지 않습니다.
 3. 검색엔진에는 새 주소로 다시 등록하고 사이트맵을 제출합니다.
 
 모든 페이지의 대표 주소(canonical), 사이트맵, RSS가 새 주소로 자동으로 바뀝니다.

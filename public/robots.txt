@@ -3,4 +3,4 @@ Allow: /
 Disallow: /api/
 Disallow: /admin
 
-Sitemap: https://passionstore.pages.dev/sitemap.xml
+Sitemap: https://passionstore.kr/sitemap.xml
