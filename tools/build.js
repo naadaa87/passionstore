@@ -43,7 +43,7 @@ const hashOf = (files) => {
   h.update(JSON.stringify(site));
   return h.digest('hex').slice(0, 8);
 };
-site.assetVersion = hashOf(['assets/css/style.css', 'assets/js/main.js', 'assets/js/forms.js']);
+site.assetVersion = hashOf(['assets/css/style.css', 'assets/js/main.js', 'assets/js/forms.js', 'assets/js/track.js']);
 
 const write = (rel, content) => {
   const p = path.join(OUT, rel);

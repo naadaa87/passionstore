@@ -96,6 +96,55 @@ const SCHEMA = [
     action TEXT NOT NULL, target TEXT, detail TEXT,
     at TEXT NOT NULL
   )`,
+  // 회원 변동 기록(가입·탈퇴·휴회·복귀). 회원 정보를 지운 뒤에도 유지율·이탈률을 계산할 수 있게 남깁니다.
+  // 이름·연락처 없이 무작위 회원 번호와 날짜만 둡니다.
+  `CREATE TABLE IF NOT EXISTS member_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    tier TEXT NOT NULL DEFAULT 'member',
+    day TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_mevent_day ON member_events(kind, day)`,
+  `CREATE INDEX IF NOT EXISTS idx_mevent_member ON member_events(member_id)`,
+  // 홈페이지 방문 통계. 쿠키를 쓰지 않고 IP 주소도 저장하지 않습니다.
+  // visitor: 그날의 무작위 값 + IP + 브라우저 정보로 만든 해시(다음 날에는 이어지지 않음)
+  // session: 브라우저 탭을 닫으면 사라지는 무작위 값
+  `CREATE TABLE IF NOT EXISTS pageviews (
+    id TEXT PRIMARY KEY,
+    day TEXT NOT NULL,
+    at TEXT NOT NULL,
+    path TEXT NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    visitor TEXT NOT NULL,
+    session TEXT NOT NULL,
+    ref_kind TEXT NOT NULL DEFAULT 'direct',
+    ref_host TEXT NOT NULL DEFAULT '',
+    utm_source TEXT NOT NULL DEFAULT '',
+    utm_medium TEXT NOT NULL DEFAULT '',
+    utm_campaign TEXT NOT NULL DEFAULT '',
+    device TEXT NOT NULL DEFAULT 'desktop',
+    seconds INTEGER NOT NULL DEFAULT 0,
+    scroll INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_pv_day ON pageviews(day)`,
+  `CREATE INDEX IF NOT EXISTS idx_pv_path ON pageviews(path, day)`,
+  `CREATE INDEX IF NOT EXISTS idx_pv_session ON pageviews(session)`,
+  `CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    day TEXT NOT NULL,
+    at TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    path TEXT NOT NULL DEFAULT '',
+    label TEXT NOT NULL DEFAULT '',
+    target TEXT NOT NULL DEFAULT '',
+    session TEXT NOT NULL DEFAULT ''
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_event_day ON events(kind, day)`,
+  `CREATE TABLE IF NOT EXISTS analytics_salt (
+    day TEXT PRIMARY KEY,
+    salt TEXT NOT NULL
+  )`,
 ];
 
 let ready = false;
@@ -126,4 +175,9 @@ export async function log(db, admin, action, target = '', detail = '') {
     await run(db, 'INSERT INTO logs (admin_id, admin_name, action, target, detail, at) VALUES (?, ?, ?, ?, ?, ?)',
       admin ? admin.id : null, admin ? admin.name : '시스템', action, String(target).slice(0, 200), String(detail).slice(0, 1000), now());
   } catch (e) { /* 기록 실패는 무시 */ }
+}
+
+// 회원 변동 기록. kind: join(가입·재가입), left(탈퇴), pause(휴회), resume(복귀)
+export function memberEvent(db, memberId, kind, tier, day) {
+  return db.prepare('INSERT INTO member_events (member_id, kind, tier, day) VALUES (?, ?, ?, ?)').bind(memberId, kind, tier || 'member', day || today());
 }

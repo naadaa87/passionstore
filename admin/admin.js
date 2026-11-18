@@ -379,7 +379,7 @@
 
   /* ---------- 틀 ---------- */
   var NAV = [
-    { title: '운영', items: [['', '오늘 할 일'], ['applications', '가입 신청', 'apply'], ['jangnal-apps', '장날 신청', 'jangnal'], ['members', '회원 명부'], ['sangdans', '상단']] },
+    { title: '운영', items: [['', '오늘 할 일'], ['kpi', '운영 지표'], ['applications', '가입 신청', 'apply'], ['jangnal-apps', '장날 신청', 'jangnal'], ['members', '회원 명부'], ['sangdans', '상단']] },
     { title: '홈페이지', items: [['schedule', '장날 일정'], ['journal', '상회보'], ['settings', '사이트 정보']] },
     { title: '회장 전용', owner: true, items: [['accounts', '관리자 계정'], ['logs', '활동 기록'], ['data', '개인정보 관리']] },
   ];
@@ -586,6 +586,482 @@
         '</div></div>', '오늘 할 일');
       if (v) goRows(v);
       refreshCounts();
+    });
+  };
+
+  /* ======================================================================
+     운영 지표
+     ====================================================================== */
+  var KPI_DAYS = [['7', '최근 7일'], ['30', '최근 30일'], ['90', '최근 90일'], ['365', '최근 1년']];
+  var SRC = {
+    direct: '직접 방문·즐겨찾기', naver: '네이버 검색', naver_blog: '네이버 블로그·카페', google: '구글 검색', daum: '다음 검색', bing: 'Bing 검색',
+    kakao: '카카오톡', instagram: '인스타그램', facebook: '페이스북', threads: '스레드', youtube: '유튜브', other: '다른 사이트',
+  };
+  var DEVICE = { mobile: '휴대폰', desktop: '컴퓨터', tablet: '태블릿' };
+  var PAGE_NAMES = {
+    '/': '첫 화면', '/about': '열정상회 소개', '/programs': '모임 안내', '/jangnal': '장날', '/join': '가입 안내', '/charter': '상회 헌장',
+    '/faq': '자주 묻는 질문', '/journal/': '상회보 목록', '/privacy': '개인정보 처리방침', '/404': '없는 주소',
+  };
+  var FORM_NAMES = { apply: '가입 신청서', jangnal: '장날 신청서' };
+  var fmt = function (n) { return n == null || isNaN(n) ? '–' : Math.round(n).toLocaleString('ko-KR'); };
+  var fmt1 = function (n) { return n == null || isNaN(n) ? '–' : (Math.round(n * 10) / 10).toLocaleString('ko-KR'); };
+  var rate = function (r) { return r == null || isNaN(r) ? '–' : Math.round(r * 100) + '%'; };
+  var ratio = function (a, b) { return b ? a / b : null; };
+  var dur = function (s) {
+    if (!s) return '–';
+    s = Math.round(s);
+    var m = Math.floor(s / 60);
+    return m ? m + '분' + (s % 60 ? ' ' + (s % 60) + '초' : '') : s + '초';
+  };
+  var pageName = function (p) { return p.title || PAGE_NAMES[p.path] || p.path; };
+  var shortDay = function (d) { return (+d.slice(5, 7)) + '. ' + (+d.slice(8, 10)) + '.'; };
+  var monthLabel = function (m) { return (+m.slice(5, 7)) + '월'; };
+  var monthFull = function (m) { return m.slice(0, 4) + '년 ' + (+m.slice(5, 7)) + '월'; };
+
+  // 앞 기간과 비교: 수(kind 'n'), 비율(kind 'p', %p 차이)
+  function delta(cur, prev, kind) {
+    if (cur == null || prev == null) return '<span class="d">앞 기간과 비교할 기록 없음</span>';
+    if (kind === 'p') {
+      var dp = Math.round((cur - prev) * 100);
+      return '<span class="d">' + (dp === 0 ? '앞 기간과 같음' : (dp > 0 ? '▲ ' : '▼ ') + Math.abs(dp) + '%p <span class="vs">앞 기간 대비</span>') + '</span>';
+    }
+    if (!prev) return '<span class="d">' + (cur ? '앞 기간 0' : '앞 기간과 같음') + '</span>';
+    var d = Math.round(((cur - prev) / prev) * 100);
+    return '<span class="d">' + (d === 0 ? '앞 기간과 비슷함' : (d > 0 ? '▲ ' : '▼ ') + Math.abs(d) + '% <span class="vs">앞 기간 대비</span>') + '</span>';
+  }
+  var tile = function (label, value, sub) {
+    return '<div class="kpi-tile"><span class="k">' + h(label) + '</span><b>' + value + '</b>' + (sub || '') + '</div>';
+  };
+  var plain = function (text) { return '<span class="d">' + h(text) + '</span>'; };
+
+  // 순위 막대(한 가지 색). rows: { label, n, sub, share }
+  function rankBars(rows, o) {
+    o = o || {};
+    if (!rows.length) return '<p class="kpi-empty">' + h(o.empty || '아직 기록이 없습니다.') + '</p>';
+    var max = Math.max.apply(null, rows.map(function (r) { return r.n; }).concat([1]));
+    return '<ol class="rank">' + rows.map(function (r) {
+      return '<li title="' + h(r.title || r.label) + ' ' + fmt(r.n) + '"><span class="l">' + h(r.label) + (r.sub ? '<small>' + h(r.sub) + '</small>' : '') + '</span>' +
+        '<span class="bar"><i style="width:' + Math.max(1.5, (r.n * 100) / max) + '%"></i></span>' +
+        '<span class="v">' + fmt(r.n) + (r.share != null ? '<small>' + rate(r.share) + '</small>' : '') + '</span></li>';
+    }).join('') + '</ol>';
+  }
+
+  // 단계별 흐름. steps: { label, n, hint }
+  function funnel(steps) {
+    var max = Math.max.apply(null, steps.map(function (s) { return s.n; }).concat([1]));
+    return '<ol class="funnel">' + steps.map(function (s, i) {
+      var prev = i ? steps[i - 1].n : null;
+      var conv = i && prev ? Math.round((s.n * 100) / prev) : null;
+      return '<li><div class="f-top"><span class="l">' + h(s.label) + (s.hint ? '<small>' + h(s.hint) + '</small>' : '') + '</span>' +
+        '<span class="v"><b>' + fmt(s.n) + '</b>' + (i ? '<small>' + (conv == null ? '–' : '앞 단계의 ' + conv + '%') + '</small>' : '') + '</span></div>' +
+        '<div class="bar"><i style="width:' + Math.max(s.n ? 1.5 : 0, (s.n * 100) / max) + '%"></i></div></li>';
+    }).join('') + '</ol>';
+  }
+
+  var tview = function (head, rows) {
+    return '<details class="tview"><summary>표로 보기</summary><div class="tbl-wrap"><table class="tbl"><thead><tr>' +
+      head.map(function (x, i) { return '<th' + (i ? ' class="n"' : '') + '>' + h(x) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr>' + r.map(function (x, i) { return '<td' + (i ? ' class="n"' : '') + '>' + h(x) + '</td>'; }).join('') + '</tr>'; }).join('') +
+      '</tbody></table></div></details>';
+  };
+
+  /* ---------- 그래프(SVG) ---------- */
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function niceStep(raw) {
+    if (raw <= 1) return 1;
+    var p = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
+    var f = raw / p;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p;
+  }
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(SVGNS, tag);
+    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    return e;
+  }
+  function svgText(x, y, text, cls, anchor) {
+    var t = svgEl('text', { x: x, y: y, class: cls || 'ax', 'text-anchor': anchor || 'middle' });
+    t.textContent = text;
+    return t;
+  }
+  // 막대 끝만 둥글게(기준선 쪽은 각지게)
+  function barPath(x, base, w, len, up) {
+    if (len <= 0) return '';
+    var r = Math.min(4, w / 2, len);
+    var tip = up ? base - len : base + len;
+    var s = up ? 1 : -1;
+    return 'M' + x + ',' + base + 'V' + (tip + s * r) + 'Q' + x + ',' + tip + ' ' + (x + r) + ',' + tip +
+      'H' + (x + w - r) + 'Q' + (x + w) + ',' + tip + ' ' + (x + w) + ',' + (tip + s * r) + 'V' + base + 'Z';
+  }
+  function showTip(box, tip, html, x, y) {
+    tip.innerHTML = html;
+    tip.hidden = false;
+    var bw = box.clientWidth;
+    var tw = tip.offsetWidth;
+    var left = Math.min(Math.max(0, x - tw / 2), bw - tw);
+    tip.style.left = left + 'px';
+    tip.style.top = Math.max(0, y - tip.offsetHeight - 12) + 'px';
+  }
+
+  // 한 줄 꺾은선: points [{k, v}], o: { label, unit, xLabel, tipLabel }
+  function drawLine(box, points, o) {
+    box.innerHTML = '';
+    var W = Math.max(280, box.clientWidth);
+    var H = 230, L0 = 44, R0 = 14, T0 = 14, B0 = 30;
+    var pw = W - L0 - R0, ph = H - T0 - B0;
+    var max = Math.max.apply(null, points.map(function (p) { return p.v; }).concat([0]));
+    var step = niceStep(Math.max(1, max) / 4);
+    var top = Math.max(step * 2, Math.ceil(max / step) * step);
+    var n = points.length;
+    var X = function (i) { return L0 + (n > 1 ? (i * pw) / (n - 1) : pw / 2); };
+    var Y = function (v) { return T0 + ph - (v / top) * ph; };
+    var svg = svgEl('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': o.label + ' 추이. 아래 표로 보기에서 숫자를 확인할 수 있습니다.' });
+    for (var v = 0; v <= top + 1e-9; v += step) {
+      svg.appendChild(svgEl('line', { x1: L0, x2: W - R0, y1: Y(v), y2: Y(v), class: v === 0 ? 'base' : 'grid' }));
+      svg.appendChild(svgText(L0 - 8, Y(v) + 4, fmt(v), 'ax', 'end'));
+    }
+    var every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(pw / 74))));
+    points.forEach(function (p, i) {
+      if (i % every === 0 || i === n - 1) {
+        if (i !== n - 1 && n - 1 - i < every) return;
+        svg.appendChild(svgText(X(i), H - 8, o.xLabel(p.k), 'ax', n === 1 ? 'middle' : i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'));
+      }
+    });
+    var d = points.map(function (p, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(p.v).toFixed(1); }).join('');
+    if (n > 1) svg.appendChild(svgEl('path', { d: d + 'L' + X(n - 1) + ',' + Y(0) + 'L' + X(0) + ',' + Y(0) + 'Z', class: 'area' }));
+    svg.appendChild(svgEl('path', { d: d, class: 'ln' }));
+    if (n === 1) svg.appendChild(svgEl('circle', { cx: X(0), cy: Y(points[0].v), r: 4.5, class: 'dot' }));
+    var cross = svgEl('line', { y1: T0, y2: T0 + ph, class: 'cross', visibility: 'hidden' });
+    var dot = svgEl('circle', { r: 4.5, class: 'dot', visibility: 'hidden' });
+    svg.appendChild(cross);
+    svg.appendChild(dot);
+    var hit = svgEl('rect', { x: L0 - 10, y: 0, width: pw + 20, height: H - B0 + 6, class: 'hit' });
+    svg.appendChild(hit);
+    box.appendChild(svg);
+    var tip = document.createElement('div');
+    tip.className = 'tip';
+    tip.hidden = true;
+    box.appendChild(tip);
+    var move = function (e) {
+      var r = svg.getBoundingClientRect();
+      var x = e.clientX - r.left;
+      var i = n > 1 ? Math.round(((x - L0) / pw) * (n - 1)) : 0;
+      i = Math.max(0, Math.min(n - 1, i));
+      var p = points[i];
+      cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('visibility', 'visible');
+      dot.setAttribute('cx', X(i)); dot.setAttribute('cy', Y(p.v)); dot.setAttribute('visibility', 'visible');
+      showTip(box, tip, '<span class="tk">' + h(o.tipLabel(p.k)) + '</span>' + h(o.label) + ' <b>' + fmt(p.v) + h(o.unit) + '</b>', X(i), Y(p.v));
+    };
+    // 손가락으로 누른 경우에는 손을 떼도 말풍선을 남겨 둡니다.
+    var leave = function (e) { if (e.pointerType === 'touch') return; cross.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden'); tip.hidden = true; };
+    hit.addEventListener('pointermove', move);
+    hit.addEventListener('pointerdown', move);
+    hit.addEventListener('pointerleave', leave);
+  }
+
+  // 위아래로 나뉜 막대: 가입(위) · 탈퇴(아래)
+  function drawJoinLeft(box, months) {
+    box.innerHTML = '';
+    var W = Math.max(280, box.clientWidth);
+    var H = 220, L0 = 36, R0 = 8, T0 = 12, B0 = 28;
+    var pw = W - L0 - R0, ph = H - T0 - B0;
+    var upMax = Math.max.apply(null, months.map(function (m) { return m.joins; }).concat([1]));
+    var dnMax = Math.max.apply(null, months.map(function (m) { return m.lefts; }).concat([1]));
+    var step = niceStep(Math.max(upMax, dnMax) / 3);
+    var up = Math.ceil(upMax / step) * step, dn = Math.ceil(dnMax / step) * step;
+    var unit = ph / (up + dn);
+    var base = T0 + up * unit;
+    var n = months.length, band = pw / n, bw = Math.max(6, Math.min(26, band * 0.56));
+    var svg = svgEl('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': '월별 가입과 탈퇴. 아래 표로 보기에서 숫자를 확인할 수 있습니다.' });
+    [[up, -1], [dn, 1]].forEach(function (g) {
+      for (var v = step; v <= g[0] + 1e-9; v += step) {
+        var y = base + g[1] * v * unit;
+        svg.appendChild(svgEl('line', { x1: L0, x2: W - R0, y1: y, y2: y, class: 'grid' }));
+        svg.appendChild(svgText(L0 - 8, y + 4, fmt(v), 'ax', 'end'));
+      }
+    });
+    svg.appendChild(svgText(L0 - 8, base + 4, '0', 'ax', 'end'));
+    var shade = svgEl('rect', { y: T0, height: ph, width: band, class: 'shade', visibility: 'hidden' });
+    svg.appendChild(shade);
+    var every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(pw / 40))));
+    months.forEach(function (m, i) {
+      var x = L0 + i * band + (band - bw) / 2;
+      if (m.joins) svg.appendChild(svgEl('path', { d: barPath(x, base - 1, bw, m.joins * unit - 1, true), class: 'up' }));
+      if (m.lefts) svg.appendChild(svgEl('path', { d: barPath(x, base + 1, bw, m.lefts * unit - 1, false), class: 'dn' }));
+      if ((i % every === 0 && n - 1 - i >= every) || i === n - 1) svg.appendChild(svgText(L0 + i * band + band / 2, H - 8, monthLabel(m.m), 'ax'));
+    });
+    svg.appendChild(svgEl('line', { x1: L0, x2: W - R0, y1: base, y2: base, class: 'base' }));
+    var hit = svgEl('rect', { x: L0, y: 0, width: pw, height: H - B0 + 4, class: 'hit' });
+    svg.appendChild(hit);
+    box.appendChild(svg);
+    var tip = document.createElement('div');
+    tip.className = 'tip';
+    tip.hidden = true;
+    box.appendChild(tip);
+    var move = function (e) {
+      var r = svg.getBoundingClientRect();
+      var i = Math.max(0, Math.min(n - 1, Math.floor((e.clientX - r.left - L0) / band)));
+      var m = months[i];
+      shade.setAttribute('x', L0 + i * band); shade.setAttribute('visibility', 'visible');
+      showTip(box, tip, '<span class="tk">' + h(monthFull(m.m)) + '</span>가입 <b>' + fmt(m.joins) + '명</b> · 탈퇴 <b>' + fmt(m.lefts) + '명</b>', L0 + i * band + band / 2, base - m.joins * unit);
+    };
+    hit.addEventListener('pointermove', move);
+    hit.addEventListener('pointerdown', move);
+    hit.addEventListener('pointerleave', function (e) { if (e.pointerType === 'touch') return; shade.setAttribute('visibility', 'hidden'); tip.hidden = true; });
+  }
+
+  var kpiCharts = [];
+  var kpiResizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(kpiResizeTimer);
+    kpiResizeTimer = setTimeout(function () {
+      kpiCharts = kpiCharts.filter(function (c) { return document.body.contains(c.box); });
+      kpiCharts.forEach(function (c) { if (c.width !== c.box.clientWidth) { c.width = c.box.clientWidth; c.draw(); } });
+    }, 150);
+  });
+  function mountChart(box, draw) {
+    if (!box) return;
+    var c = { box: box, draw: draw, width: box.clientWidth };
+    kpiCharts.push(c);
+    draw();
+  }
+
+  ROUTES.kpi = function (c) {
+    var days = c.query.get('days') || '30';
+    if (!KPI_DAYS.some(function (d) { return d[0] === days; })) days = '30';
+    return api('kpi?days=' + days).then(function (d) {
+      var R = d.range, S = d.site, F = d.funnel, M = d.members, G = d.meetings;
+      var cur = S.cur, prev = S.prev;
+      var hasTraffic = cur.pageviews || prev.pageviews;
+      var rangeText = (R.start.slice(0, 4) !== R.end.slice(0, 4) ? R.start.slice(0, 4) + '년 ' : '') + (+R.start.slice(5, 7)) + '월 ' + (+R.start.slice(8, 10)) + '일부터 ' +
+        (+R.end.slice(5, 7)) + '월 ' + (+R.end.slice(8, 10)) + '일(오늘)까지';
+      var notrack = false;
+      try { notrack = localStorage.getItem('ps_notrack') === '1'; } catch (e) { /* 무시 */ }
+
+      /* ----- 한눈에 ----- */
+      var netGrow = M.cur.joins - M.cur.lefts;
+      var overview = '<div class="kpi-tiles">' +
+        tile('방문자', fmt(cur.visitors) + '<small>명</small>', delta(cur.visitors, prev.visitors)) +
+        tile('가입 신청', fmt(F.applyCur.applications) + '<small>건</small>', delta(F.applyCur.applications, F.applyPrev.applications)) +
+        tile('새로 가입한 회원', fmt(M.cur.joins) + '<small>명</small>', plain('탈퇴 ' + M.cur.lefts + '명 · 순증 ' + (netGrow > 0 ? '+' : '') + netGrow + '명')) +
+        tile('활동 중인 회원', fmt(M.active) + '<small>명</small>', plain('상회원 ' + M.activeMember + ' · 사랑방 ' + M.activeSarangbang + ' · 휴회 ' + M.paused)) +
+        tile('상단 모임', fmt(G.cur.meetings) + '<small>번</small>', delta(G.cur.meetings, G.prev.meetings)) +
+        tile('상단 모임 출석률', rate(G.cur.attendRate), delta(G.cur.attendRate, G.prev.attendRate, 'p')) +
+        tile('장날 참석', fmt(F.jangnal[4].n) + '<small>명</small>', plain('신청 ' + F.jangnal[2].n + '명 가운데')) +
+        tile('회비 납부율', rate(ratio(M.fee.paid, M.fee.total)), plain('납부 대상 ' + M.fee.total + '명 가운데 ' + M.fee.paid + '명')) +
+        '</div>';
+
+      /* ----- 홈페이지 ----- */
+      var srcTotal = sum(S.sources, function (r) { return r.n; });
+      var devTotal = sum(S.devices, function (r) { return r.n; });
+      var siteTiles = '<div class="kpi-tiles small">' +
+        tile('페이지 조회', fmt(cur.pageviews) + '<small>회</small>', delta(cur.pageviews, prev.pageviews)) +
+        tile('방문 수', fmt(cur.sessions) + '<small>회</small>', delta(cur.sessions, prev.sessions)) +
+        tile('방문당 본 페이지', fmt1(cur.pagesPerSession) + '<small>쪽</small>', delta(cur.pagesPerSession, prev.pagesPerSession)) +
+        tile('방문당 머문 시간', dur(cur.sessionSec), delta(cur.sessionSec, prev.sessionSec)) +
+        tile('한 페이지만 보고 나간 방문', rate(cur.bounceRate), delta(cur.bounceRate, prev.bounceRate, 'p')) +
+        tile('끝까지 읽은 페이지', rate(cur.readRate), delta(cur.readRate, prev.readRate, 'p')) +
+        '</div>';
+      var pageTable = function (list) {
+        return '<div class="tbl-wrap"><table class="tbl stack"><thead><tr><th>페이지</th><th class="n">조회</th><th class="n">방문자</th><th class="n">평균 머문 시간</th><th class="n">끝까지 읽음</th></tr></thead><tbody>' +
+          list.map(function (p) {
+            return '<tr><td class="strong" data-label="페이지"><a href="' + h(p.path) + '" target="_blank" rel="noopener">' + h(pageName(p)) + '</a><span class="sub">' + h(p.path) + '</span></td>' +
+              '<td class="n" data-label="조회">' + fmt(p.views) + '</td><td class="n" data-label="방문자">' + fmt(p.visitors) + '</td>' +
+              '<td class="n" data-label="평균 머문 시간">' + dur(p.sec) + '</td><td class="n" data-label="끝까지 읽음">' + rate(p.read_rate) + '</td></tr>';
+          }).join('') + '</tbody></table></div>';
+      };
+      var pagesTable = S.pages.length ? pageTable(S.pages.slice(0, 10)) +
+        (S.pages.length > 10 ? '<details class="tview more"><summary>나머지 ' + (S.pages.length - 10) + '개 페이지 보기</summary>' + pageTable(S.pages.slice(10)) + '</details>' : '')
+        : '<p class="kpi-empty">아직 기록이 없습니다.</p>';
+      var site = '<section class="block kpi-sec" id="kpi-site"><h2 class="sec">홈페이지 방문<small>' + h(rangeText) + '</small></h2>' +
+        (hasTraffic ? '' : '<div class="note plain"><p>아직 쌓인 방문 기록이 없습니다. 방문 통계는 이 기능이 홈페이지에 반영된 날부터 쌓입니다. 브라우저에서 ‘추적 안 함’을 켠 방문과 관리자 화면 방문은 세지 않습니다.</p></div>') +
+        siteTiles +
+        '<div class="kpi-card"><div class="card-head"><h3 data-line-title>' + (R.monthly ? '월별' : '날짜별') + ' 방문자</h3>' +
+        '<div class="seg" role="group" aria-label="그래프에 보일 값"><button type="button" data-metric="visitors" aria-pressed="true">방문자</button><button type="button" data-metric="pageviews" aria-pressed="false">페이지 조회</button></div></div>' +
+        '<div class="chart" data-chart="line"></div>' +
+        tview([R.monthly ? '달' : '날짜', '방문자', '페이지 조회'], S.series.slice().reverse().map(function (p) { return [R.monthly ? monthFull(p.k) : dayLabel(p.k), fmt(p.visitors), fmt(p.pageviews)]; })) + '</div>' +
+        '<div class="kpi-2">' +
+        '<div class="kpi-card"><h3>들어온 경로<small>방문 ' + fmt(srcTotal) + '회 기준</small></h3>' +
+        rankBars(S.sources.map(function (r) { return { label: SRC[r.kind] || r.kind, n: r.n, share: ratio(r.n, srcTotal) }; })) +
+        (S.refHosts.length ? '<p class="kpi-foot">다른 사이트: ' + S.refHosts.map(function (r) { return h(r.host) + ' ' + r.n; }).join(', ') + '</p>' : '') + '</div>' +
+        '<div class="kpi-card"><h3>방문한 기기<small>방문 ' + fmt(devTotal) + '회 기준</small></h3>' +
+        rankBars(S.devices.map(function (r) { return { label: DEVICE[r.device] || r.device, n: r.n, share: ratio(r.n, devTotal) }; })) +
+        (S.campaigns.length ? '<h3 class="mt">홍보 링크(utm)별 방문</h3>' + rankBars(S.campaigns.map(function (r) {
+          return { label: r.campaign || r.source, sub: [r.source, r.medium].filter(Boolean).join(' / '), n: r.n };
+        })) : '') + '</div>' +
+        '</div>' +
+        '<div class="kpi-card"><h3>많이 본 페이지</h3>' + pagesTable + '</div>' +
+        '<div class="kpi-2">' +
+        '<div class="kpi-card"><h3>많이 읽은 상회보 글</h3>' + rankBars(S.journal.map(function (p) {
+          return { label: pageName(p), n: p.views, sub: '방문자 ' + fmt(p.visitors) + '명 · 평균 ' + dur(p.sec) + ' · 끝까지 읽음 ' + rate(p.read_rate) };
+        }), { empty: '이 기간에 읽힌 상회보 글이 없습니다.' }) + '</div>' +
+        '<div class="kpi-card"><h3>많이 연 질문<small>자주 묻는 질문에서 펼쳐 본 횟수</small></h3>' + rankBars(S.faq.map(function (r) { return { label: r.label, n: r.n }; }), { empty: '이 기간에 펼쳐 본 질문이 없습니다.' }) + '</div>' +
+        '</div>' +
+        '<div class="kpi-card"><h3>많이 누른 버튼·링크<small>클릭 ' + fmt(cur.clicks) + '회 · 버튼이나 링크를 한 번이라도 누른 방문 ' + rate(cur.clickRate) + '</small></h3>' +
+        rankBars(S.clicks.map(function (r) {
+          var t = r.target || '';
+          var where = t === 'tel' ? '전화 걸기' : t === 'mailto' ? '메일 쓰기' : /^form:/.test(t) ? (FORM_NAMES[t.slice(5)] || '신청서') + ' 보내기' : t;
+          return { label: r.label || where, sub: where && where !== r.label ? where : '', n: r.n };
+        }), { empty: '이 기간에 기록된 클릭이 없습니다.' }) + '</div>' +
+        '</section>';
+
+      /* ----- 가입 흐름 ----- */
+      var A = F.apply;
+      var J = F.jangnal;
+      var appTotal = sum(F.appSources, function (r) { return r.n; });
+      var viaChair = sum(F.appSources.filter(function (r) { return /회장|운영진/.test(r.source); }), function (r) { return r.n; });
+      var flow = '<section class="block kpi-sec" id="kpi-flow"><h2 class="sec">가입까지의 흐름<small>' + h(rangeText) + '</small></h2>' +
+        '<div class="kpi-tiles small four">' +
+        tile('방문에서 가입 신청까지', rate(ratio(A[3].n, A[0].n)), plain('방문 ' + fmt(A[0].n) + '회 → 신청 ' + fmt(A[3].n) + '건')) +
+        tile('신청에서 가입까지', rate(ratio(A[5].n, A[3].n)), delta(ratio(F.applyCur.joined, F.applyCur.applications), ratio(F.applyPrev.joined, F.applyPrev.applications), 'p')) +
+        tile('신청부터 명부 등록까지', F.leadDays == null ? '–' : fmt1(F.leadDays) + '<small>일</small>', plain('이 기간에 등록한 회원 평균')) +
+        tile('회장·운영진을 통한 신청', rate(ratio(viaChair, appTotal)), plain('신청 ' + appTotal + '건 가운데 ' + viaChair + '건')) +
+        '</div>' +
+        '<div class="kpi-2">' +
+        '<div class="kpi-card"><h3>가입 신청 흐름</h3>' + funnel([
+          { label: '홈페이지 방문', n: A[0].n },
+          { label: '가입 안내 페이지를 본 방문', n: A[1].n },
+          { label: '신청서를 쓰기 시작한 방문', n: A[2].n },
+          { label: '신청서 접수', n: A[3].n },
+          { label: '면담까지 진행', n: A[4].n, hint: '면담 예정·승인·등록 완료' },
+          { label: '회원 등록', n: A[5].n },
+        ]) + '</div>' +
+        '<div class="kpi-card"><h3>장날 신청 흐름</h3>' + funnel([
+          { label: '장날 페이지를 본 방문', n: J[0].n },
+          { label: '신청서를 쓰기 시작한 방문', n: J[1].n },
+          { label: '신청서 접수', n: J[2].n, hint: '알림만 받기와 취소는 빼고' },
+          { label: '참석 확정', n: J[3].n },
+          { label: '실제 참석', n: J[4].n },
+        ]) + '</div>' +
+        '</div>' +
+        '<div class="kpi-card"><h3>가입 신청 경로<small>신청서의 ‘알게 된 경로’</small></h3>' +
+        rankBars(F.appSources.map(function (r) { return { label: r.source, n: r.n, share: ratio(r.n, appTotal) }; }), { empty: '이 기간에 들어온 가입 신청이 없습니다.' }) + '</div>' +
+        '<p class="kpi-foot">신청서 접수 뒤 단계는 이 기간에 들어온 신청이 지금 어느 단계까지 갔는지로 셉니다. 최근 신청은 아직 면담 전이라 숫자가 작게 보일 수 있습니다.</p>' +
+        '</section>';
+
+      /* ----- 회원 ----- */
+      var memberSrcTotal = sum(M.sources, function (r) { return r.n; });
+      var recent = M.recent.length ? '<ul class="mini-list">' + M.recent.map(function (m) {
+        return '<li><span><a href="#/members/' + enc(m.id) + '">' + h(m.name) + '</a> <span class="muted">' + h(m.work || '') + '</span></span>' +
+          '<span class="muted tabular">' + h(m.sangdan_name || L.tier[m.tier]) + ' · ' + h(m.joined_at || '-') + '</span></li>';
+      }).join('') + '</ul>' : '<p class="kpi-empty">등록한 회원이 없습니다.</p>';
+      var members = '<section class="block kpi-sec" id="kpi-members"><h2 class="sec">회원<small>활동 중인 회원은 오늘 기준</small></h2>' +
+        '<div class="kpi-tiles small">' +
+        tile('새로 가입', fmt(M.cur.joins) + '<small>명</small>', delta(M.cur.joins, M.prev.joins)) +
+        tile('탈퇴', fmt(M.cur.lefts) + '<small>명</small>', delta(M.cur.lefts, M.prev.lefts)) +
+        tile('기간 이탈률', rate(M.cur.churn), plain('기간 시작 때 회원 ' + M.cur.atStart + '명 기준')) +
+        tile('가입 90일 뒤 남은 비율', rate(ratio(M.retention.kept, M.retention.total)), plain(M.retention.total ? '90일이 지난 가입 ' + M.retention.total + '명 기준' : '가입 90일이 지난 회원이 아직 없습니다')) +
+        tile('사업자 확인', rate(ratio(M.checks.verified, M.checks.total)), plain('활동 회원 ' + M.checks.total + '명 가운데 ' + M.checks.verified + '명')) +
+        tile('상단 배정 대기', fmt(M.unassigned) + '<small>명</small>', plain('활동 중인 상회원 가운데')) +
+        '</div>' +
+        '<div class="kpi-card"><div class="card-head"><h3>월별 가입과 탈퇴<small>이번 달을 포함한 최근 12개월</small></h3>' +
+        '<div class="legend"><span><i class="sw up"></i>가입</span><span><i class="sw dn"></i>탈퇴</span></div></div>' +
+        '<div class="chart" data-chart="joinleft"></div>' +
+        tview(['달', '가입', '탈퇴', '순증'], M.months.slice().reverse().map(function (m) { return [monthFull(m.m), fmt(m.joins), fmt(m.lefts), (m.joins - m.lefts > 0 ? '+' : '') + (m.joins - m.lefts)]; })) + '</div>' +
+        '<div class="kpi-2">' +
+        '<div class="kpi-card"><h3>회원이 된 경로<small>탈퇴하지 않은 회원 ' + memberSrcTotal + '명</small></h3>' +
+        rankBars(M.sources.map(function (r) { return { label: r.source, n: r.n, share: ratio(r.n, memberSrcTotal) }; }), { empty: '등록한 회원이 없습니다.' }) + '</div>' +
+        '<div class="kpi-card"><div class="card-head"><h3>최근 가입한 회원</h3><a href="#/members">회원 명부 전체 보기</a></div>' + recent + '</div>' +
+        '</div></section>';
+
+      /* ----- 모임 ----- */
+      var sdRows = G.sangdans.length ? '<div class="tbl-wrap"><table class="tbl stack"><thead><tr><th>상단</th><th>시간대</th><th>인원</th><th class="n">모임</th><th>출석률</th><th class="n">회장 진행</th><th>마지막 모임</th></tr></thead><tbody>' +
+        G.sangdans.map(function (s) {
+          var fill = s.capacity ? Math.min(100, Math.round((s.members * 100) / s.capacity)) : 0;
+          var att = s.records ? Math.round(((s.present || 0) * 100) / s.records) : null;
+          var old = !s.last_meeting || daysAgo(s.last_meeting) > 21;
+          var href = '#/sangdans/' + enc(s.id);
+          return '<tr class="go" data-href="' + href + '"><td class="strong" data-label="상단"><a href="' + href + '">' + h(s.name) + '</a>' + (s.status !== 'open' ? '<span class="sub">닫음</span>' : '') + '</td>' +
+            '<td data-label="시간대">' + h(s.slot || '-') + '</td>' +
+            '<td data-label="인원"><span class="tabular">' + s.members + ' / ' + s.capacity + '</span><div class="meter sm"><i style="width:' + fill + '%"></i></div></td>' +
+            '<td class="n" data-label="모임">' + fmt(s.meetings) + '</td>' +
+            '<td data-label="출석률">' + (att == null ? '<span class="muted">기록 없음</span>' : '<span class="tabular">' + att + '%</span><div class="meter sm"><i style="width:' + att + '%"></i></div>') + '</td>' +
+            '<td class="n" data-label="회장 진행">' + fmt(s.chair || 0) + '</td>' +
+            '<td data-label="마지막 모임">' + (s.last_meeting ? '<span class="' + (old ? 'flag' : '') + '">' + h(dayLabel(s.last_meeting)) + '</span>' : '<span class="flag">기록 없음</span>') + '</td></tr>';
+        }).join('') + '</tbody></table></div>' : '<p class="kpi-empty">운영 중인 상단이 없습니다.</p>';
+      var today = todayStr();
+      var jRows = G.jangnal.length ? '<div class="tbl-wrap"><table class="tbl stack"><thead><tr><th>장날</th><th class="n">신청</th><th class="n">참석 확정</th><th class="n">참석</th><th class="n">불참</th><th class="n">취소</th><th class="n">참석률</th></tr></thead><tbody>' +
+        G.jangnal.map(function (j) {
+          var future = j.session > today;
+          var done = j.attended + j.no_show;
+          return '<tr><td class="strong" data-label="장날">' + h(sessionName(j.session)) + (future ? '<span class="sub">예정</span>' : '') + '</td>' +
+            '<td class="n" data-label="신청">' + fmt(j.total - j.canceled) + '</td><td class="n" data-label="참석 확정">' + fmt(j.confirmed) + '</td>' +
+            '<td class="n" data-label="참석">' + (future ? '–' : fmt(j.attended)) + '</td><td class="n" data-label="불참">' + (future ? '–' : fmt(j.no_show)) + '</td>' +
+            '<td class="n" data-label="취소">' + fmt(j.canceled) + '</td>' +
+            '<td class="n" data-label="참석률">' + (future || !done ? '–' : Math.round((j.attended * 100) / done) + '%') + '</td></tr>';
+        }).join('') + '</tbody></table></div>' : '<p class="kpi-empty">이 기간에 열린 장날이 없습니다.</p>';
+      var meetings = '<section class="block kpi-sec" id="kpi-meetings"><h2 class="sec">모임과 참여<small>' + h(rangeText) + '</small></h2>' +
+        '<div class="kpi-tiles small">' +
+        tile('운영 중인 상단', fmt(G.open) + '<small>개</small>', plain(G.newSangdans ? '이 기간에 새로 연 상단 ' + G.newSangdans + '개' : '이 기간에 새로 연 상단 없음')) +
+        tile('상단 자리 채움', rate(ratio(G.seated, G.capacity)), plain('정원 ' + G.capacity + '자리에 ' + G.seated + '명')) +
+        tile('상단 모임', fmt(G.cur.meetings) + '<small>번</small>', delta(G.cur.meetings, G.prev.meetings)) +
+        tile('출석률', rate(G.cur.attendRate), delta(G.cur.attendRate, G.prev.attendRate, 'p')) +
+        tile('모임당 평균 참석', fmt1(G.cur.avgPresent) + '<small>명</small>', delta(G.cur.avgPresent, G.prev.avgPresent)) +
+        tile('회장이 직접 진행한 모임', rate(ratio(G.cur.chairLed, G.cur.meetings)), plain('낮을수록 상단이 스스로 돌아갑니다')) +
+        '</div>' +
+        '<div class="kpi-card"><h3>상단별 참여</h3>' + sdRows + '</div>' +
+        '<div class="kpi-card"><h3>장날 회차별 참여</h3>' + jRows +
+        '<p class="kpi-foot">다음 장날 알림만 신청한 사람 ' + fmt(G.notify) + '명. ' +
+        (G.guests ? '이 기간에 장날에 참석한 손님 ' + G.guests + '명 가운데 ' + G.guestsJoined + '명이 지금 회원입니다(휴대전화 번호로 맞춰 봤습니다).' : '이 기간에 참석 처리한 장날 손님은 없습니다.') + '</p></div>' +
+        '</section>';
+
+      var defs = '<details class="defs block"><summary>지표를 이렇게 셉니다</summary><dl>' +
+        '<dt>방문자</dt><dd>같은 날 같은 기기에서 다시 들어온 방문은 한 명으로 셉니다. 날이 바뀌면 새로 셉니다. 쿠키를 쓰지 않아 여러 날에 걸친 재방문은 구분하지 않습니다.</dd>' +
+        '<dt>방문 수</dt><dd>브라우저 탭을 열어 홈페이지를 둘러본 한 번의 흐름입니다. 탭을 닫았다가 다시 오면 새 방문입니다.</dd>' +
+        '<dt>머문 시간</dt><dd>화면이 보이는 상태에서 1분 안에 스크롤·클릭·입력이 있었던 시간만 5초 단위로 셉니다. 창만 열어 둔 시간은 넣지 않습니다.</dd>' +
+        '<dt>끝까지 읽은 페이지</dt><dd>페이지 길이의 75% 이상 스크롤한 경우입니다.</dd>' +
+        '<dt>한 페이지만 보고 나간 방문</dt><dd>방문 가운데 페이지를 하나만 본 비율입니다.</dd>' +
+        '<dt>가입·탈퇴</dt><dd>회원 명부에 등록하거나 상태를 탈퇴로 바꾼 날을 기준으로 셉니다. 이 기능을 넣기 전에 등록된 회원은 가입일을 기준으로 한 번 옮겨 적었습니다.</dd>' +
+        '<dt>기간 이탈률</dt><dd>기간 동안 탈퇴한 회원 수를 기간이 시작될 때의 회원 수로 나눈 값입니다.</dd>' +
+        '<dt>출석률</dt><dd>상단 모임 기록에서 출석을 체크한 회원 수를 출석 대상 회원 수로 나눈 값입니다.</dd>' +
+        '<dt>보관</dt><dd>방문 기록에는 IP 주소와 이름이 들어가지 않습니다. 13개월이 지난 방문 기록은 저절로 지워집니다.</dd>' +
+        '</dl></details>';
+
+      var v = c.put(head('운영 지표', {
+        desc: '홈페이지 방문부터 가입, 모임 참여까지 한 화면에서 봅니다. 숫자는 고르신 기간과 바로 앞 같은 길이의 기간을 비교합니다.',
+        actions: '<label class="check notrack"><input type="checkbox" data-notrack' + (notrack ? ' checked' : '') + '> 이 브라우저의 방문은 통계에서 빼기</label>',
+      }) +
+        '<div class="kpi-bar">' + tabs(KPI_DAYS, days, function (k) { return '#/kpi?days=' + k; }) +
+        '<nav class="kpi-jump" aria-label="지표 묶음으로 이동"><button type="button" data-jump="kpi-site">홈페이지</button><button type="button" data-jump="kpi-flow">가입 흐름</button><button type="button" data-jump="kpi-members">회원</button><button type="button" data-jump="kpi-meetings">모임</button></nav></div>' +
+        overview + site + flow + members + meetings + defs, '운영 지표');
+      if (!v) return;
+      $('.kpi-bar .tabs', v).setAttribute('aria-label', '기간 고르기');
+
+      var metric = 'visitors';
+      var lineBox = $('[data-chart="line"]', v);
+      var drawVisits = function () {
+        drawLine(lineBox, S.series.map(function (p) { return { k: p.k, v: p[metric] }; }), {
+          label: metric === 'visitors' ? '방문자' : '페이지 조회',
+          unit: metric === 'visitors' ? '명' : '회',
+          xLabel: R.monthly ? monthLabel : shortDay,
+          tipLabel: R.monthly ? monthFull : dayLabel,
+        });
+      };
+      mountChart(lineBox, drawVisits);
+      $$('[data-metric]', v).forEach(function (b) {
+        b.addEventListener('click', function () {
+          metric = b.getAttribute('data-metric');
+          $$('[data-metric]', v).forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+          $('[data-line-title]', v).textContent = (R.monthly ? '월별 ' : '날짜별 ') + (metric === 'visitors' ? '방문자' : '페이지 조회');
+          drawVisits();
+        });
+      });
+      var jlBox = $('[data-chart="joinleft"]', v);
+      mountChart(jlBox, function () { drawJoinLeft(jlBox, M.months); });
+      goRows(v);
+      $$('[data-jump]', v).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var t = document.getElementById(b.getAttribute('data-jump'));
+          var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (t) t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+        });
+      });
+      $('[data-notrack]', v).addEventListener('change', function (e) {
+        try {
+          if (e.target.checked) localStorage.setItem('ps_notrack', '1');
+          else localStorage.removeItem('ps_notrack');
+          toast(e.target.checked ? '이제 이 브라우저에서 홈페이지를 봐도 통계에 넣지 않습니다.' : '이 브라우저의 방문도 다시 통계에 넣습니다.');
+        } catch (x) { toast('이 브라우저에서는 설정을 저장하지 못했습니다.', true); }
+      });
     });
   };
 
@@ -1685,7 +2161,7 @@
       var v = c.put(head('개인정보 관리', { desc: '처리방침에 적은 대로 신청자와 회원 정보를 보관하고 파기합니다.' }) +
         '<section class="block"><h2 class="sec">보관 기간이 지난 정보 정리</h2>' +
         '<dl class="facts"><dt>6개월이 지난 미가입 신청서</dt><dd>' + d.applications + '건</dd><dt>탈퇴한 회원 정보</dt><dd>' + d.leftMembers + '명</dd></dl>' +
-        '<p class="muted">가입하지 않은 신청자의 정보는 신청일로부터 6개월 뒤, 탈퇴한 회원의 정보는 지체 없이 파기한다고 처리방침에 적혀 있습니다. 한 달에 한 번 이 화면에서 정리해 주세요. 탈퇴 회원의 출석 기록과 가입 신청서도 함께 지워집니다.</p>' +
+        '<p class="muted">가입하지 않은 신청자의 정보는 신청일로부터 6개월 뒤, 탈퇴한 회원의 정보는 지체 없이 파기한다고 처리방침에 적혀 있습니다. 한 달에 한 번 이 화면에서 정리해 주세요. 탈퇴 회원의 출석 기록과 가입 신청서도 함께 지워집니다. 홈페이지 방문 기록은 13개월이 지나면 저절로 지워집니다.</p>' +
         '<div class="form-actions"><button type="button" class="btn ' + (total ? 'btn-primary' : 'btn-line') + '" data-purge' + (total ? '' : ' disabled') + '>' + (total ? '지금 정리하기' : '정리할 정보가 없습니다') + '</button></div></section>' +
         '<section class="block"><h2 class="sec">목록 내려받기</h2><p class="muted">엑셀이나 구글 시트에서 열 수 있는 CSV 파일입니다. 내려받은 파일에는 연락처가 들어 있으니 쓰고 나면 지워 주세요. 내려받은 기록은 활동 기록에 남습니다.</p>' +
         '<div class="form-actions"><a class="btn btn-line" href="/api/admin/export?kind=applications">가입 신청</a><a class="btn btn-line" href="/api/admin/export?kind=jangnal">장날 신청</a><a class="btn btn-line" href="/api/admin/export?kind=members">회원 명부</a></div></section>', '개인정보 관리');

@@ -1,5 +1,6 @@
 // 열정상회 관리자 API (/api/admin/*)
-import { ensureSchema, all, first, run, now, today, uid, log } from './db.js';
+import { ensureSchema, all, first, run, now, today, uid, log, memberEvent } from './db.js';
+import { kpi } from './kpi.js';
 import { json, readJson, checkSameOrigin, HttpError, clip, isDate } from './http.js';
 import {
   currentAdmin, requireRole, createSession, destroySession, verifyPassword, hashPassword,
@@ -80,6 +81,7 @@ async function dispatch({ request, env, params }) {
     case 'GET me': return json({ me: admin });
     case 'POST me': return changePassword(ctx);
     case 'GET dashboard': return dashboard(ctx);
+    case 'GET kpi': return kpi(ctx);
     case 'GET counts': return json({ items: await all(db, "SELECT type, COUNT(*) AS n FROM applications WHERE status = 'new' GROUP BY type") });
     case 'GET applications': return segs[1] ? getApplication(ctx) : listApplications(ctx);
     case 'PATCH applications': return updateApplication(ctx);
@@ -318,6 +320,7 @@ async function convertApplication({ db, request, segs, admin }) {
     tier, sangdanId, optDate(b.joined_at, '가입일') || today(), oneOf(b.fee_status || 'unpaid', FEES, '회비 상태'), optDate(b.fee_paid_until, '회비 납부 기한'),
     bool(b.verified), bool(b.charter_signed), bool(b.founding), r.source || '', r.id, t, t);
   await run(db, "UPDATE applications SET status = 'joined', member_id = ?, updated_at = ? WHERE id = ?", id, t, r.id);
+  await memberEvent(db, id, 'join', tier, optDate(b.joined_at, '가입일') || today()).run();
   await log(db, admin, '상회원 등록', r.name, sangdanId ? `상단 배정` : '상단 미배정');
   return json({ ok: true, id });
 }
@@ -389,7 +392,10 @@ function memberValues(b, cur) {
 
 async function createMember({ db, request, admin }) {
   const b = await readJson(request);
-  const empty = { tier: 'member', status: 'active', fee_status: 'unpaid', roles: '', memo: '', verified: 0, charter_signed: 0, founding: 0 };
+  const empty = {
+    tier: 'member', status: 'active', fee_status: 'unpaid', roles: '', memo: '', verified: 0, charter_signed: 0, founding: 0,
+    sangdan_id: null, joined_at: null, paused_until: null, fee_paid_until: null,
+  };
   const m = memberValues(b, empty);
   if (!m.name) throw new HttpError(400, 'invalid', '이름을 적어 주세요.');
   if (m.tier !== 'member') m.sangdan_id = null;
@@ -403,6 +409,7 @@ async function createMember({ db, request, admin }) {
     id, m.name, m.phone || '', m.email || '', m.work || '', m.biz_type || '', m.region || '', m.years || '', m.size || '', m.times || '',
     m.tier, m.status, m.sangdan_id, m.roles, m.joined_at || today(), m.paused_until, m.fee_status, m.fee_paid_until,
     m.verified, m.charter_signed, m.founding, m.memo, t, t);
+  if (m.status !== 'left') await memberEvent(db, id, 'join', m.tier, m.joined_at || today()).run();
   await log(db, admin, '회원 직접 등록', m.name);
   return json({ ok: true, id });
 }
@@ -426,6 +433,10 @@ async function updateMember({ db, request, segs, admin }) {
     m.name, m.phone, m.email, m.work, m.biz_type, m.region, m.years, m.size, m.times, m.tier, m.status,
     m.sangdan_id, m.roles, m.joined_at, m.paused_until, m.fee_status, m.fee_paid_until, m.verified, m.charter_signed, m.founding,
     m.memo, now(), cur.id);
+  if (cur.status !== m.status) {
+    const kind = m.status === 'left' ? 'left' : cur.status === 'left' ? 'join' : m.status === 'paused' ? 'pause' : 'resume';
+    await memberEvent(db, cur.id, kind, m.tier, today()).run();
+  }
   const changes = [];
   if (cur.status !== m.status) changes.push(`상태 ${cur.status} → ${m.status}`);
   if ((cur.sangdan_id || '') !== (m.sangdan_id || '')) changes.push('상단 변경');
@@ -440,9 +451,10 @@ async function updateMember({ db, request, segs, admin }) {
 
 async function deleteMember({ db, segs, admin }) {
   requireRole(admin, 'owner');
-  const m = await first(db, 'SELECT id, name, application_id FROM members WHERE id = ?', segs[1]);
+  const m = await first(db, 'SELECT id, name, tier, status, application_id FROM members WHERE id = ?', segs[1]);
   if (!m) throw new HttpError(404, 'not_found', '회원을 찾을 수 없습니다.');
   await db.batch([
+    ...(m.status !== 'left' ? [memberEvent(db, m.id, 'left', m.tier, today())] : []),
     db.prepare('DELETE FROM attendance WHERE member_id = ?').bind(m.id),
     db.prepare('UPDATE sangdans SET leader_id = NULL WHERE leader_id = ?').bind(m.id),
     db.prepare('DELETE FROM applications WHERE id = ? OR member_id = ?').bind(m.application_id || '', m.id),
@@ -864,6 +876,10 @@ async function purge({ db, request, admin }) {
     stmts.push(db.prepare('DELETE FROM members WHERE id = ?').bind(m.id));
   });
   stmts.push(db.prepare('DELETE FROM admin_sessions WHERE expires_at < ?').bind(now()));
+  // 방문 통계 원자료는 13개월만 둡니다.
+  const statsCutoff = addDays(today(), -400);
+  stmts.push(db.prepare('DELETE FROM pageviews WHERE day < ?').bind(statsCutoff));
+  stmts.push(db.prepare('DELETE FROM events WHERE day < ?').bind(statsCutoff));
   stmts.push(db.prepare('DELETE FROM logs WHERE at < ?').bind(new Date(Date.now() - 2 * 365 * 24 * 3600 * 1000).toISOString()));
   await db.batch(stmts);
   await log(db, admin, '개인정보 정리', `신청서 ${apps.n}건, 탈퇴 회원 ${left.length}명`, '6개월 지난 미가입 신청서와 탈퇴 회원 정보 삭제');

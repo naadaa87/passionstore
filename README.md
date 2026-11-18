@@ -3,7 +3,7 @@
 업에 진심인 사람들의 모임, 열정상회(熱情商會)의 공식 홈페이지입니다.
 사업자·자영업자·프리랜서·1인 창업자 커뮤니티를 소개하고, 장날 참가와 상회원 가입 신청을 받습니다.
 
-- 정적 사이트 + Cloudflare Pages Functions(신청서 접수, 관리자 화면)
+- 정적 사이트 + Cloudflare Pages Functions(신청서 접수, 방문 통계, 관리자 화면)
 - 외부 패키지 없이 `node tools/build.js` 하나로 빌드합니다.
 - 관리자 화면은 `/admin`입니다. 설정과 사용법은 [docs/admin-guide.md](docs/admin-guide.md)에 있습니다.
 
@@ -21,6 +21,7 @@ GitHub에 커밋하면 자동으로 빌드·배포됩니다. 빌드에 실패하
 
 회장과 운영진이 각자 계정으로 들어와 아래 일을 합니다.
 
+- 운영 지표: 방문자, 많이 본 페이지, 들어온 경로, 가입·장날 신청 흐름, 회원 증감, 상단·장날 참여율
 - 가입 신청 처리(연락 → 면담 → 승인 → 회원 명부 등록), 장날 신청 확인
 - 회원 명부, 상단 배정, 상단장 지정, 상단 모임 기록(진행자·출석)
 - 장날 일정, 상회보 글, 사이트 정보 고치기(저장하면 GitHub에 기록되고 홈페이지가 다시 만들어짐)
@@ -79,6 +80,7 @@ server/                      ← 관리자 API 공통 코드 (D1, 로그인, Git
 public/                      ← 배포되는 파일 (빌드 결과 + 이미지·CSS·JS)
 functions/api/apply.js       ← 신청서 접수 (POST /api/apply)
 functions/api/admin/         ← 관리자 API (/api/admin/*)
+functions/api/track.js       ← 방문 통계 받기 (POST /api/track, 쿠키 없음)
 docs/admin-guide.md          ← 관리자 화면 설정과 사용법
 tools/images.js              ← 홈페이지 그림 목록(이름·설명)과 <img> 도우미
 docs/seo-guide.md            ← 검색 노출 운영 가이드

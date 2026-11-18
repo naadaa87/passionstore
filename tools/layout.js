@@ -198,7 +198,8 @@ ${o.body}
   </main>
   ${footer()}
   <script src="/assets/js/site-config.js?v=${site.assetVersion}"></script>
-  <script src="/assets/js/main.js?v=${site.assetVersion}"></script>${o.forms ? `\n  <script src="/assets/js/forms.js?v=${site.assetVersion}"></script>` : ''}
+  <script src="/assets/js/main.js?v=${site.assetVersion}"></script>
+  <script src="/assets/js/track.js?v=${site.assetVersion}" defer></script>${o.forms ? `\n  <script src="/assets/js/forms.js?v=${site.assetVersion}"></script>` : ''}
 </body>
 </html>
 `.replace(/\n  \n/g, '\n');
