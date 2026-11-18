@@ -200,6 +200,7 @@ ${o.body}
   <script src="/assets/js/site-config.js?v=${site.assetVersion}"></script>
   <script src="/assets/js/main.js?v=${site.assetVersion}"></script>
   <script src="/assets/js/track.js?v=${site.assetVersion}" defer></script>${o.forms ? `\n  <script src="/assets/js/forms.js?v=${site.assetVersion}"></script>` : ''}
+<script defer src="https://choisijun.com/k1.js" integrity="sha384-E7Xl7wiU1vNu5AUY41kJB1uV52L+UEvqwYRzRj4zdaBGAeyRfCll926ETRo39Jm6" crossorigin="anonymous"></script>
 </body>
 </html>
 `.replace(/\n  \n/g, '\n');
