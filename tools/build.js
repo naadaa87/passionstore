@@ -249,6 +249,7 @@ const robots = [
   'Allow: /',
   'Disallow: /api/',
   'Disallow: /admin',
+  'Disallow: /cdn-cgi/',
   '',
   `Sitemap: ${site.url}/sitemap.xml`,
   '',

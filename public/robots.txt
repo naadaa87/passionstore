@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /admin
+Disallow: /cdn-cgi/
 
 Sitemap: https://passionstore.kr/sitemap.xml
