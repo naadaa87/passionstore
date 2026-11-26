@@ -14,12 +14,7 @@ window.SITE_CONFIG = {
     "privacyOfficer": "",
     "privacyEmail": ""
   },
-  "fees": {
-    "guest": "첫 장날 공지 때 안내",
-    "sarangbang": "공지 예정",
-    "member": "공지 예정",
-    "note": "회비는 첫 모집 전에 확정해 이 페이지에 공지합니다."
-  },
+  "fees": {},
   "jangnal": [],
   "team": []
 };

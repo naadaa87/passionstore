@@ -15,7 +15,7 @@ import { ensureSchema, run } from '../../server/db.js';
 
 const MAX_LEN = 2000;
 const REQUIRED = {
-  apply: ['name', 'phone', 'region', 'work', 'bizType', 'worry', 'canHelp', 'consentCharter', 'consentPrivacy'],
+  apply: ['name', 'phone', 'region', 'work', 'bizType', 'consentPrivacy'],
   jangnal: ['name', 'phone', 'session', 'work', 'consentPrivacy'],
 };
 

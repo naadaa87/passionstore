@@ -79,7 +79,7 @@
   var APPLY_FIELDS = [
     ['region', '주로 일하는 지역'], ['work', '하는 일'], ['bizType', '사업 형태'], ['years', '업력'], ['size', '함께 일하는 사람'],
     ['times', '참석하기 좋은 시간대'], ['worry', '풀고 싶은 고민'], ['goal', '1년 뒤 바라는 변화'], ['canHelp', '도울 수 있는 것'],
-    ['avoid', '불편한 업종'], ['roles', '맡아 보고 싶은 역할'], ['consentCharter', '헌장 동의'], ['consentPrivacy', '개인정보 동의'],
+    ['avoid', '불편한 업종'], ['roles', '맡아 보고 싶은 역할'], ['message', '하고 싶은 말'], ['consentCharter', '헌장 동의'], ['consentPrivacy', '개인정보 동의'],
   ];
   var JANGNAL_FIELDS = [['sessionLabel', '참가할 장날'], ['work', '하는 일'], ['question', '이야기하고 싶은 고민'], ['consentPrivacy', '개인정보 동의']];
   var sessionName = function (s, label) { return s === 'notify' ? '다음 장날 알림만' : (/^\d{4}-/.test(s || '') ? dayLabel(s) : (label || s || '')); };
@@ -506,7 +506,6 @@
         if (n >= 5) todos.push({ n: n, t: slot + ' 시간대 대기자가 ' + n + '명입니다', s: '다섯 명 이상 모이면 새 상단을 열 수 있습니다.', href: '#/sangdans/new?slot=' + enc(slot), amber: true });
       });
       if (stale.length) todos.push({ n: stale.length, t: '3주 넘게 모임 기록이 없는 상단', s: stale.map(function (s) { return s.name; }).join(', '), href: '#/sangdans', amber: true });
-      if (d.feeDue.length) todos.push({ n: d.feeDue.length, t: '회비 확인이 필요한 회원', s: '미납이거나 2주 안에 납부 기한이 끝납니다.', href: '#/members?fee=due&status=active', amber: true });
       if (d.pausedReturn.length) todos.push({ n: d.pausedReturn.length, t: '2주 안에 휴회가 끝나는 회원', s: '복귀 전에 상단장과 함께 연락해 둡니다.', href: '#/members?status=paused', amber: true });
 
       var activeTodos = todos.filter(function (t) { return t.n > 0; });
@@ -847,7 +846,7 @@
         tile('상단 모임', fmt(G.cur.meetings) + '<small>번</small>', delta(G.cur.meetings, G.prev.meetings)) +
         tile('상단 모임 출석률', rate(G.cur.attendRate), delta(G.cur.attendRate, G.prev.attendRate, 'p')) +
         tile('장날 참석', fmt(F.jangnal[4].n) + '<small>명</small>', plain('신청 ' + F.jangnal[2].n + '명 가운데')) +
-        tile('회비 납부율', rate(ratio(M.fee.paid, M.fee.total)), plain('납부 대상 ' + M.fee.total + '명 가운데 ' + M.fee.paid + '명')) +
+        tile('가입 90일 뒤 남은 비율', rate(ratio(M.retention.kept, M.retention.total)), plain(M.retention.total ? '90일이 지난 가입 ' + M.retention.total + '명 기준' : '가입 90일이 지난 회원이 아직 없습니다')) +
         '</div>';
 
       /* ----- 홈페이지 ----- */
@@ -1176,8 +1175,6 @@
           fld('구분', sel('tier', 'member', opts('tier'))) +
           fld('상단', sel('sangdan_id', '', sangdanOptions(sd.items, '', times)), { hint: times ? '희망 시간대: ' + h(times) : '희망 시간대를 적지 않았습니다.' }) +
           fld('가입일', inp('joined_at', todayStr(), 'type="date"')) +
-          fld('회비', sel('fee_status', 'unpaid', opts('fee'))) +
-          fld('회비 납부 기한', inp('fee_paid_until', '', 'type="date"'), { hint: '이 날짜까지 낸 것으로 봅니다.' }) +
           '<div class="full checks">' + chk('verified', false, '사업자 확인을 마쳤습니다') + chk('charter_signed', !!a.data.consentCharter, '헌장 서약을 받았습니다') + chk('founding', false, '창립 상회원') + '</div>' +
           '</div>',
         ok: '명부에 올리기',
@@ -1267,14 +1264,12 @@
       var t = [['active', '활동'], ['paused', '휴회'], ['left', '탈퇴'], ['all', '전체']];
       var rows = d.items.map(function (m) {
         var href = '#/members/' + enc(m.id);
-        var feeFlag = m.fee_status === 'unpaid' || (m.fee_status === 'paid' && (!m.fee_paid_until || m.fee_paid_until < todayStr()));
         return '<tr class="go" data-href="' + href + '"><td class="strong" data-label="이름"><a href="' + href + '">' + h(m.name) + '</a>' + (m.founding ? '<span class="sub">창립 상회원</span>' : '') + '</td>' +
           '<td class="clip" data-label="하는 일"><span>' + h(m.work || '-') + '</span></td>' +
           '<td data-label="구분">' + h(L.tier[m.tier]) + '</td>' +
           '<td data-label="상단">' + (m.sangdan_name ? h(m.sangdan_name) : m.tier === 'member' ? '<span class="flag">미배정</span>' : '-') + '</td>' +
           '<td data-label="역할">' + h(splitList(m.roles, ',').join(', ') || '-') + '</td>' +
           '<td data-label="가입일" class="tabular">' + h(m.joined_at || '-') + '</td>' +
-          '<td data-label="회비">' + chip('fee', m.fee_status) + (m.fee_paid_until ? '<span class="sub' + (feeFlag ? ' flag' : '') + '">' + h(m.fee_paid_until) + '까지</span>' : '') + '</td>' +
           '<td data-label="상태">' + chip('member', m.status) + (m.status === 'paused' && m.paused_until ? '<span class="sub">' + h(m.paused_until) + ' 복귀</span>' : '') + '</td></tr>';
       }).join('');
       var sangdanOpts = [['', '모든 상단'], ['none', '상단 미배정']].concat(sds.map(function (s) { return [s.id, s.name]; }));
@@ -1284,18 +1279,15 @@
       }) + tabs(t, status, function (k) { return link({ status: k }); }) +
         '<div class="toolbar">' + sel('tier', tier, [['', '모든 구분']].concat(opts('tier')), 'aria-label="구분" data-f="tier"') +
         sel('sangdan', sangdan, sangdanOpts, 'aria-label="상단" data-f="sangdan"') +
-        '<label class="check"><input type="checkbox" data-fee' + (fee === 'due' ? ' checked' : '') + '> <span>회비 확인 필요만</span></label>' +
         '<form class="search" data-search><input name="q" type="search" value="' + h(q) + '" placeholder="이름, 연락처, 하는 일, 메모" aria-label="회원 검색"><button class="btn btn-line">찾기</button></form>' +
         '<span class="spacer"></span><span class="result-count">' + d.items.length + '명</span></div>' +
-        (fee === 'due' ? '<div class="note"><p>회비가 미납이거나 납부 기한이 2주 안에 끝나는 활동 회원입니다.</p></div>' : '') +
-        (d.items.length ? '<div class="tbl-wrap"><table class="tbl stack"><thead><tr><th>이름</th><th>하는 일</th><th>구분</th><th>상단</th><th>역할</th><th>가입일</th><th>회비</th><th>상태</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+        (d.items.length ? '<div class="tbl-wrap"><table class="tbl stack"><thead><tr><th>이름</th><th>하는 일</th><th>구분</th><th>상단</th><th>역할</th><th>가입일</th><th>상태</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
           : empty(q || tier || sangdan || fee ? '조건에 맞는 회원이 없습니다.' : '명부에 회원이 없습니다.', '<a href="#/applications?status=approved">가입 승인한 신청 보기</a>')), '회원 명부');
       if (!v) return;
       goRows(v);
       $$('[data-f]', v).forEach(function (s) {
         s.addEventListener('change', function () { var o = {}; o[s.getAttribute('data-f')] = s.value; location.hash = link(o); });
       });
-      $('[data-fee]', v).addEventListener('change', function (e) { location.hash = link({ fee: e.target.checked ? 'due' : '', status: e.target.checked ? 'active' : status }); });
       $('[data-search]', v).addEventListener('submit', function (e) { e.preventDefault(); location.hash = link({ q: $('[name=q]', e.target).value.trim() }); });
     });
   };
@@ -1325,8 +1317,6 @@
         fld('휴회 끝나는 날', inp('paused_until', m.paused_until, 'type="date"'), { hint: '휴회는 한 번에 3개월까지입니다.' }) +
         group('맡은 역할', multi('roles', roles, ROLES), { full: true }) +
         fld('가입일', inp('joined_at', m.joined_at, 'type="date"')) +
-        fld('회비', sel('fee_status', m.fee_status, opts('fee'))) +
-        fld('회비 납부 기한', inp('fee_paid_until', m.fee_paid_until, 'type="date"'), { hint: '이 날짜까지 낸 것으로 봅니다.' }) +
         '<div class="full checks">' + chk('verified', !!m.verified, '사업자 확인을 마쳤습니다') + chk('charter_signed', !!m.charter_signed, '헌장 서약을 받았습니다') + chk('founding', !!m.founding, '창립 상회원') + '</div>' +
         fld('운영진 메모', ta('memo', m.memo, 'rows="4" placeholder="면담 내용, 소개해 줄 만한 회원, 챙길 일"'), { full: true }) +
         '</div><div class="form-actions"><button class="btn btn-primary">' + (isNew ? '명부에 등록' : '저장') + '</button><a class="btn btn-line" href="#/members">목록으로</a></div></form>';
@@ -1986,7 +1976,6 @@
      ====================================================================== */
   var SETTINGS = [
     { key: 'contact', title: '연락처', desc: '홈페이지 아래쪽 문의 칸에 나옵니다. 비워 둔 칸은 나오지 않습니다.', fields: [['email', '문의 이메일', 'email'], ['kakaoChannel', '카카오톡 채널 주소', 'url'], ['instagram', '인스타그램 주소', 'url'], ['naverBlog', '네이버 블로그 주소', 'url']] },
-    { key: 'fees', title: '회비', desc: '가입 안내와 장날 페이지의 금액 칸에 그대로 나옵니다. “월 3만 원”처럼 적습니다.', fields: [['guest', '손님(장날 참가비)'], ['sarangbang', '사랑방 회원'], ['member', '상회원'], ['note', '회비 안내 문구', 'textarea']] },
     { key: 'team', title: '운영진 소개', desc: '소개 페이지의 “지금의 운영진”에 나옵니다. 맡은 일과 이름만 적습니다.' },
     { key: 'operator', title: '운영 정보', desc: '홈페이지 맨 아래와 개인정보 처리방침에 나옵니다.', fields: [['name', '운영 주체'], ['representative', '대표자'], ['registrationNo', '사업자등록번호'], ['address', '주소'], ['privacyOfficer', '개인정보 보호책임자'], ['privacyEmail', '개인정보 문의 이메일', 'email']] },
     { key: 'verification', title: '검색엔진 소유 확인', desc: '네이버 서치어드바이저, 구글 서치 콘솔, 빙 웹마스터 도구에서 받은 코드를 넣습니다. 네이버·구글·빙은 content 값만, 다음은 robots.txt에 넣으라는 한 줄 전체를 넣습니다.', fields: [['naver', '네이버'], ['google', '구글'], ['bing', '빙'], ['daumRobotsLine', '다음 robots.txt 한 줄']] },
@@ -2000,7 +1989,7 @@
       var data = s.data;
       var owner = isOwner();
       var dis = owner ? '' : ' disabled';
-      var html = '<div class="narrow">' + head('사이트 정보', { desc: '홈페이지 곳곳에 들어가는 연락처, 회비, 운영 정보입니다. 칸마다 따로 저장되고, 1~2분 뒤 홈페이지에 반영됩니다.' }) +
+      var html = '<div class="narrow">' + head('사이트 정보', { desc: '홈페이지 곳곳에 들어가는 연락처, 운영진 소개, 운영 정보입니다. 칸마다 따로 저장되고, 1~2분 뒤 홈페이지에 반영됩니다.' }) +
         (owner ? '' : '<div class="note"><p>사이트 정보는 회장 계정만 바꿀 수 있습니다. 고칠 내용이 있으면 회장에게 알려 주세요.</p></div>') +
         SETTINGS.map(function (sec) {
           var inner;

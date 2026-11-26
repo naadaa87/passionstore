@@ -3,10 +3,9 @@
   'use strict';
   var LABELS = {
     name: '이름', phone: '휴대전화', email: '이메일', region: '주로 일하는 지역', work: '하는 일',
-    bizType: '사업 형태', years: '업력', size: '함께 일하는 사람', times: '참석하기 좋은 시간대',
-    worry: '풀고 싶은 고민', goal: '1년 뒤 바라는 변화', canHelp: '도울 수 있는 것', avoid: '불편한 업종',
-    source: '알게 된 경로', roles: '맡아 보고 싶은 역할', session: '참가할 장날', question: '이야기하고 싶은 고민',
-    consentCharter: '헌장 동의', consentPrivacy: '개인정보 동의'
+    bizType: '사업 형태', years: '업력', times: '참석하기 좋은 시간대',
+    source: '알게 된 경로', message: '하고 싶은 말', session: '참가할 장날', question: '이야기하고 싶은 고민',
+    consentPrivacy: '개인정보 동의'
   };
   var TITLES = { apply: '상회원 가입 신청', jangnal: '장날 참가 신청' };
 
@@ -17,7 +16,7 @@
       if (el.type === 'checkbox') {
         if (!el.checked) return;
         if (data[el.name]) data[el.name] = [].concat(data[el.name], el.value);
-        else data[el.name] = (el.name === 'times' || el.name === 'roles') ? [el.value] : el.value;
+        else data[el.name] = el.name === 'times' ? [el.value] : el.value;
       } else {
         data[el.name] = el.value.trim();
         if (el.hasAttribute('data-jangnal-select') && el.selectedIndex >= 0) data.sessionLabel = el.options[el.selectedIndex].text;
@@ -96,6 +95,61 @@
       } catch (e) { manual(); }
     });
   }
+
+  /* 개인정보 처리방침: 신청서를 쓰던 화면을 떠나지 않도록 창 위에 띄워 보여 줍니다. */
+  var privacyDialog = null;
+  function openPrivacy(link) {
+    if (!privacyDialog) {
+      privacyDialog = document.createElement('dialog');
+      privacyDialog.className = 'policy-dialog';
+      privacyDialog.setAttribute('aria-labelledby', 'policy-dialog-title');
+      privacyDialog.innerHTML = '<div class="policy-dialog-head"><h2 id="policy-dialog-title">개인정보 처리방침</h2>' +
+        '<button type="button" class="policy-close" aria-label="닫기">닫기</button></div>' +
+        '<div class="policy-dialog-body prose"><p>불러오는 중입니다…</p></div>' +
+        '<div class="policy-dialog-foot"><button type="button" class="btn btn-primary policy-close">확인했습니다</button></div>';
+      document.body.appendChild(privacyDialog);
+      Array.prototype.forEach.call(privacyDialog.querySelectorAll('.policy-close'), function (b) {
+        b.addEventListener('click', function () { privacyDialog.close(); });
+      });
+      privacyDialog.addEventListener('click', function (e) { if (e.target === privacyDialog) privacyDialog.close(); });
+      privacyDialog.addEventListener('close', function () { if (privacyDialog.opener) privacyDialog.opener.focus(); });
+      var body = privacyDialog.querySelector('.policy-dialog-body');
+      fetch(link.getAttribute('href'), { credentials: 'same-origin' }).then(function (r) {
+        if (!r.ok) throw new Error('load');
+        return r.text();
+      }).then(function (html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var src = doc.querySelector('[data-policy]') || doc.querySelector('main .prose') || doc.querySelector('main');
+        if (!src) throw new Error('empty');
+        Array.prototype.forEach.call(src.querySelectorAll('script, form, img, picture'), function (n) { n.remove(); });
+        body.innerHTML = '';
+        Array.prototype.forEach.call(src.childNodes, function (n) { body.appendChild(document.importNode(n, true)); });
+        Array.prototype.forEach.call(body.querySelectorAll('a[href]'), function (a) { a.target = '_blank'; a.rel = 'noopener'; });
+        var op = (window.SITE_CONFIG || {}).operator || {};
+        Array.prototype.forEach.call(body.querySelectorAll('[data-operator-name]'), function (el) { el.textContent = op.name || '열정상회'; });
+        if (op.privacyOfficer || op.privacyEmail) {
+          Array.prototype.forEach.call(body.querySelectorAll('[data-privacy-contact]'), function (el) {
+            el.textContent = '담당: ' + [op.privacyOfficer, op.privacyEmail].filter(Boolean).join(', ');
+          });
+        }
+      }).catch(function () {
+        body.innerHTML = '<p>처리방침을 불러오지 못했습니다. <a href="/privacy" target="_blank" rel="noopener">새 창에서 보기</a>를 눌러 주세요. 쓰던 신청서는 그대로 남아 있습니다.</p>';
+      });
+    }
+    privacyDialog.opener = link;
+    if (typeof privacyDialog.showModal === 'function') {
+      privacyDialog.showModal();
+      privacyDialog.querySelector('.policy-dialog-body').scrollTop = 0;
+      return true;
+    }
+    return false;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-privacy-popup]'), function (a) {
+    a.addEventListener('click', function (e) {
+      if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+      if (openPrivacy(a)) e.preventDefault();
+    });
+  });
 
   Array.prototype.forEach.call(document.querySelectorAll('.js-form'), function (form) {
     var err = form.querySelector('.form-error');
