@@ -171,11 +171,7 @@ function home(site, ctx) {
           <div><dt>솔직하게 말할 수 있습니다</dt><dd>사업자 확인을 거친 사람끼리 만나고, 상단에서 들은 이야기는 밖으로 가져가지 않습니다. 녹음과 캡처도 하지 않습니다.</dd><dd class="ref">헌장 1조, 2조</dd></div>
           <div><dt>나와 맞는 사람과 만납니다</dt><dd>경쟁 관계는 다른 상단으로 나누고, 비슷한 단계의 사람과 한 걸음 앞선 사람을 섞습니다.</dd><dd class="ref">상단 배정 원칙</dd></div>
           <div><dt>말로 끝나지 않습니다</dt><dd>약속은 장부에 적고 다음 모임에서 결과를 말합니다. 지키지 못한 약속도 말합니다.</dd><dd class="ref">헌장 6조</dd></div>
-<<<<<<< Updated upstream
           <div><dt>한 사람의 이름으로 돌아가지 않습니다</dt><dd>프로그램마다 맡은 운영진이 있고, 장날 진행과 발표는 회원이 돌아가며 맡습니다. 회비 없이 운영해 돈 때문에 한 사람에게 기대는 일이 없습니다.</dd><dd class="ref">운영 원칙</dd></div>
-=======
-          <div><dt>한 사람의 이름으로 돌아가지 않습니다</dt><dd>프로그램마다 맡은 운영진이 있고, 장날 진행과 발표는 회원이 돌아가며 맡습니다. 모임 결산은 분기마다 공개합니다.</dd><dd class="ref">운영 원칙</dd></div>
->>>>>>> Stashed changes
         </dl>
         <a class="text-link" href="/journal/choosing-business-group">사업자 모임 고르는 기준 읽기</a>
       </div>
@@ -268,22 +264,14 @@ function about(site) {
     path: '/about',
     file: 'about.html',
     title: '열정상회 소개 — 이름의 뜻, 미션과 가치, 운영 방식',
-<<<<<<< Updated upstream
     desc: '열정상회(熱情商會)는 자기 업에 열정을 가진 사업자·자영업자·프리랜서의 모임입니다. 이름에 담은 뜻, 미션과 가치, 회장과 운영진의 운영 방식, 회비 없이 운영하는 원칙을 소개합니다.',
-=======
-    desc: '열정상회(熱情商會)는 자기 업에 열정을 가진 사업자·자영업자·프리랜서의 모임입니다. 이름에 담은 뜻, 미션과 가치, 회장과 운영진의 운영 방식, 회비 없이 운영하고 결산을 공개하는 원칙을 소개합니다.',
->>>>>>> Stashed changes
     keywords: '열정상회 소개, 사업자 커뮤니티, 사업자 모임 운영, 열정상회 운영진, 熱情商會',
     active: '/about',
     pageType: 'AboutPage',
     ...og('shop-front'),
     graph: [breadcrumbLd(site, crumbs)],
     body: `${head('열정상회를 소개합니다', '자기 업을 책임지는 사람들이 모여 서로 돕고, 같이 공부하고, 함께 도전하는 사업자 커뮤니티입니다.', crumbs,
-<<<<<<< Updated upstream
       [['why', '만든 이유'], ['name', '이름의 뜻'], ['mission', '미션과 가치'], ['operation', '운영 방식'], ['money', '회비 없는 모임'], ['words', '상회 용어']], 'shop-front')}
-=======
-      [['why', '만든 이유'], ['name', '이름의 뜻'], ['mission', '미션과 가치'], ['operation', '운영 방식'], ['money', '회비 없는 운영'], ['words', '상회 용어']], 'shop-front')}
->>>>>>> Stashed changes
 
     <section class="section" id="why">
       <div class="wrap split">
@@ -368,13 +356,8 @@ function about(site) {
               <tr><th scope="row">프로그램 담당</th><td>장날, 학당, 상담소, 도전장 기획</td></tr>
               <tr><th scope="row">웰컴 담당</th><td>가입 인터뷰, 개업식, 첫 30일 안내</td></tr>
               <tr><th scope="row">홍보 담당</th><td>상회보, SNS, 모집 안내</td></tr>
-<<<<<<< Updated upstream
               <tr><th scope="row">총무</th><td>모임 장소 섭외, 실비 정리와 공개</td></tr>
               <tr><th scope="row">감사</th><td>실비 내역 확인과 정기총회 보고</td><td>운영진이 아닌 상회원, 정기총회 선출</td></tr>
-=======
-              <tr><th scope="row">총무</th><td>참가비 관리, 지출, 분기 결산</td></tr>
-              <tr><th scope="row">감사</th><td>회계 확인과 정기총회 보고</td><td>운영진이 아닌 상회원, 정기총회 선출</td></tr>
->>>>>>> Stashed changes
               <tr><th scope="row">상단장·장날 MC·학당장·길잡이</th><td>현장 진행과 새 회원 동행</td><td>회원이 돌아가며 맡음</td></tr>
             </tbody>
           </table>
@@ -411,11 +394,7 @@ function about(site) {
         <div class="sec-head">
           <div>
             <h2>회비 없이 운영합니다</h2>
-<<<<<<< Updated upstream
             <p class="lead">열정상회는 가입비도 회비도 받지 않습니다. 자기 업을 하고 있는 사람이라면 누구나 부담 없이 들어와 서로 돕고, 함께 일하고, 같이 성장하자는 것이 이 모임을 만든 뜻입니다.</p>
-=======
-            <p class="lead">열정상회는 회비를 받지 않습니다. 자기 업을 하고 있는 사람이라면 누구나 무료로 함께하고, 서로 돕고 협업하며 같이 성장하는 것이 이 모임의 취지입니다.</p>
->>>>>>> Stashed changes
           </div>
           <div class="sec-art">${scene('gyeolsan', { sizes: '(min-width: 900px) 400px, 100vw' })}</div>
         </div>
@@ -423,30 +402,17 @@ function about(site) {
           <div>
             <h3>돈 대신 나누는 것</h3>
             <ul>
-<<<<<<< Updated upstream
               <li>품앗이판에서는 돈이 아니라 서로의 경험, 기술, 시간을 주고받습니다.</li>
               <li>모임 장소는 회원의 가게나 사무실, 무료로 쓸 수 있는 공간을 먼저 찾습니다.</li>
               <li>음료나 식사처럼 그 자리에서 드는 비용은 참석한 사람이 각자 냅니다.</li>
-=======
-              <li>회비: 없습니다. 가입과 상단·사랑방 활동은 무료입니다.</li>
-              <li>들어오는 돈: 장날 참가비, 학당 참가비 (공지할 때 금액을 함께 알립니다)</li>
-              <li>나가는 돈: 모임 공간 대관, 다과, 상담소 전문가 비용, 진행비, 운영 도구</li>
-              <li>남는 돈: 예비비와 다음 해 프로그램</li>
->>>>>>> Stashed changes
             </ul>
           </div>
           <div>
             <h3>돈에 관해 지키는 것</h3>
             <ul>
-<<<<<<< Updated upstream
               <li>가입비, 회비, 추천 수당이 없습니다.</li>
               <li>모임 비용을 함께 모아야 할 때는 금액과 쓰임을 미리 알리고, 쓴 내역을 참석한 사람에게 공개합니다.</li>
               <li>회원에게 상품이나 서비스를 파는 일은 회장과 운영진도 헌장 3조를 똑같이 따릅니다.</li>
-=======
-              <li>참가비는 단체 명의 계좌로만 받습니다. 회장 개인 계좌로 받지 않습니다.</li>
-              <li>분기마다 결산을 회원에게 공개합니다.</li>
-              <li>운영진이 아닌 감사가 회계를 확인하고, 연말 결산의 밤에서 보고합니다.</li>
->>>>>>> Stashed changes
             </ul>
           </div>
         </div>
@@ -736,11 +702,7 @@ function join(site, ctx) {
     path: '/join',
     file: 'join.html',
     title: '가입 안내 — 상회원 자격, 회원 구분, 가입 절차',
-<<<<<<< Updated upstream
     desc: '열정상회 상회원 자격과 회원 구분, 가입 절차, 휴회 기준을 안내합니다. 회비 없이 운영하며, 사업자등록이 있거나 프리랜서 소득이 확인되면 업종과 규모에 상관없이 가입할 수 있습니다.',
-=======
-    desc: '열정상회 상회원 자격과 회원 구분, 가입 절차, 휴회 기준을 안내합니다. 회비는 없습니다. 사업자등록이 있거나 프리랜서 소득이 확인되면 업종과 규모에 상관없이 무료로 가입할 수 있습니다.',
->>>>>>> Stashed changes
     keywords: '사업자 모임 가입, 자영업자 모임 가입, 무료 사업자 모임, 사업자 커뮤니티 가입 방법',
     active: '/join',
     forms: true,
@@ -757,7 +719,7 @@ function join(site, ctx) {
             <h3>상회원 자격</h3>
             <ul>
               <li>사업자등록이 있거나 프리랜서 소득이 확인되는 분</li>
-              <li>신청서와 15분 화상 인터뷰, 상회 헌장 서약을 거친 분</li>
+              <li>신청서, 15분 화상 인터뷰, 상회 헌장 서약을 거친 분</li>
               <li>창업을 준비 중이라면 장날에 손님으로 먼저 함께해 주세요.</li>
             </ul>
           </div>
@@ -778,16 +740,11 @@ function join(site, ctx) {
     <section class="section alt" id="fees">
       <div class="wrap">
         <h2>회원 구분</h2>
-<<<<<<< Updated upstream
         <p class="lead">가입비와 회비는 없습니다. 자기 업을 하고 있다면 누구나 무료로 함께 협업하고, 서로 돕고, 같이 성장할 수 있습니다.</p>
-=======
-        <p class="lead">열정상회는 회비가 없습니다. 자기만의 업을 하고 있다면 누구나 무료로 함께하고, 서로 돕고 협업하며 같이 성장합니다.</p>
->>>>>>> Stashed changes
         <div class="table-wrap">
           <table class="table">
             <thead><tr><th scope="col">구분</th><th scope="col">함께하는 것</th></tr></thead>
             <tbody>
-<<<<<<< Updated upstream
               <tr><th scope="row">손님</th><td>장날 참여, 상회보 구독. 회원이 아니어도 됩니다.</td></tr>
               <tr><th scope="row">사랑방 회원</th><td>사랑방, 품앗이판, 자료실, 장날, 학당</td></tr>
               <tr><th scope="row">상회원</th><td>상단(격주), 사랑방, 장날, 개업식과 결산의 밤, 상담소, 학당</td></tr>
@@ -795,15 +752,6 @@ function join(site, ctx) {
           </table>
         </div>
         <p class="note">회원을 추천해도 수당이나 보상은 없습니다. 좋은 사람을 소개하는 일 자체가 서로 돕는 일입니다.</p>
-=======
-              <tr><th scope="row">손님</th><td>장날 1회, 상회보 구독. 가입하기 전에 분위기를 먼저 겪어 보는 자리입니다.</td></tr>
-              <tr><th scope="row">사랑방 회원</th><td>사랑방, 품앗이판, 자료실</td></tr>
-              <tr><th scope="row">상회원</th><td>상단(격주), 사랑방, 장날, 개업식과 결산의 밤, 상담소</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="note">장날과 학당처럼 대관·다과가 필요한 자리는 공지할 때 참가비를 함께 알립니다. 회원 추천에 따른 혜택이나 현금 수당은 없습니다.</p>
->>>>>>> Stashed changes
       </div>
     </section>
 
@@ -813,34 +761,20 @@ function join(site, ctx) {
         <div class="steps-art">
         <ol class="steps">
           <li><strong>장날이나 상회보로 먼저 만나기</strong><span>필수는 아니지만, 분위기를 먼저 겪어 보시길 권합니다.</span></li>
-<<<<<<< Updated upstream
           <li><strong>신청서 보내기</strong><span>이름, 연락처, 하는 일, 가능한 시간대를 적습니다. 3분이면 됩니다.</span></li>
           <li><strong>15분 화상 인터뷰</strong><span>웰컴 담당 운영진이 3일 안에 연락드립니다. 가입 목적과 기대를 서로 확인합니다.</span></li>
           <li><strong>사업자 확인</strong><span>사업자 상태를 조회하거나 프리랜서 소득을 확인합니다. 확인 뒤 서류 사본은 보관하지 않습니다.</span></li>
           <li><strong>헌장 서약</strong><span>인터뷰 뒤 상회 헌장 일곱 가지 약속을 함께 읽고 서약합니다.</span></li>
-=======
-          <li><strong>신청서 보내기</strong><span>이름, 연락처, 하는 일을 적습니다. 2~3분이면 됩니다.</span></li>
-          <li><strong>15분 화상 인터뷰</strong><span>웰컴 담당 운영진이 3일 안에 연락드립니다. 가입 목적과 기대를 서로 확인합니다.</span></li>
-          <li><strong>사업자 확인</strong><span>사업자 상태를 조회하거나 프리랜서 소득을 확인합니다. 확인 뒤 서류 사본은 보관하지 않습니다.</span></li>
-          <li><strong>헌장 서약</strong><span>인터뷰 때 상회 헌장 일곱 가지를 함께 읽고 서약합니다. 결제는 없습니다.</span></li>
->>>>>>> Stashed changes
           <li><strong>개업식</strong><span>그달 개업식에서 상단장과 길잡이를 만나고, 첫 상단 날짜를 안내받습니다.</span></li>
         </ol>
         <div class="col-art">${scene('giljabi', { sizes: '(min-width: 900px) 380px, 100vw' })}</div>
         </div>
         <div class="two-col prose">
           <div>
-<<<<<<< Updated upstream
             <h3>그만둘 때</h3>
             <ul>
               <li>회비가 없으니 약정이나 위약금도 없습니다.</li>
               <li>언제든 상단장이나 운영진에게 말하면 그만둘 수 있고, 정보는 지체 없이 지웁니다.</li>
-=======
-            <h3>그만두기</h3>
-            <ul>
-              <li>언제든 그만둘 수 있습니다. 웰컴 담당 운영진에게 알려 주시면 됩니다.</li>
-              <li>회비가 없으니 따로 정산할 것도 없습니다.</li>
->>>>>>> Stashed changes
             </ul>
           </div>
           <div>
@@ -910,11 +844,7 @@ function charter(site) {
               <tr><th scope="row">회장·운영진의 사업과 얽힐 때</th><td>장소 선정, 협력상점 선정, 외주 발주처럼 자기 사업과 관련된 결정에서 빠집니다.</td></tr>
               <tr><th scope="row">회원 공간을 모임에 쓸 때</th><td>단가를 공개하고 운영위원회 승인을 받습니다. 한 사람의 공간에 몰리지 않게 돌아가며 씁니다.</td></tr>
               <tr><th scope="row">회원끼리 돈이 오갈 때</th><td>열정상회는 회원 간 투자나 대여를 모집하거나 중개하거나 보증하지 않습니다.</td></tr>
-<<<<<<< Updated upstream
               <tr><th scope="row">회원을 추천할 때</th><td>추천 수당이나 보상은 없습니다.</td></tr>
-=======
-              <tr><th scope="row">회원을 추천할 때</th><td>추천에 따른 혜택이나 현금 수당은 없습니다.</td></tr>
->>>>>>> Stashed changes
               <tr><th scope="row">전문적인 질문이 나올 때</th><td>법률·세무·노무 판단은 자격 있는 전문가가 상담소에서 다룹니다. 회원끼리는 경험만 나눕니다.</td></tr>
               <tr><th scope="row">상단 이야기를 쓰고 싶을 때</th><td>당사자 동의를 받고, 사람과 회사를 알 수 없게 정리합니다.</td></tr>
             </tbody>
@@ -944,15 +874,9 @@ function faqPage(site, ctx) {
   return {
     path: '/faq',
     file: 'faq.html',
-<<<<<<< Updated upstream
     title: '자주 묻는 질문 — 사업자 모임 가입, 상단, 장날, 운영 원칙',
     desc: '열정상회에 관해 자주 묻는 질문. 누가 가입할 수 있는지, 회비 없이 운영하는 방식, 상단 배정, 장날 참여, 영업 금지 규칙까지 한곳에 모았습니다.',
     keywords: '사업자 모임 가입 조건, 무료 사업자 모임, 프리랜서 모임 가입, 사업자 커뮤니티 질문',
-=======
-    title: '자주 묻는 질문 — 무료 사업자 모임 가입, 상단, 장날',
-    desc: '열정상회에 관해 자주 묻는 질문. 누가 가입할 수 있는지, 회비 없이 운영하는 방식, 상단 배정, 장날 참여, 영업 금지 규칙과 결산 공개 원칙까지 한곳에 모았습니다.',
-    keywords: '사업자 모임 가입 조건, 무료 자영업자 모임, 프리랜서 모임 가입, 사업자 커뮤니티 질문',
->>>>>>> Stashed changes
     active: '/faq',
     ...og('tea-tray'),
     graph: [breadcrumbLd(site, crumbs), faqLd(all)],
@@ -1107,11 +1031,7 @@ function privacy(site) {
       <div class="wrap" data-policy>
         <h2>1. 받는 항목</h2>
         <ul>
-<<<<<<< Updated upstream
           <li>가입 신청: 이름, 휴대전화, 이메일(선택), 활동 지역, 하는 일, 사업 형태, 업력, 참석 가능 시간대, 알게 된 경로, 하고 싶은 말(선택)</li>
-=======
-          <li>가입 신청: 이름, 휴대전화, 활동 지역, 하는 일, 사업 형태, 그리고 적어 주신 경우에만 이메일·업력·참석 가능 시간대·알게 된 경로·하고 싶은 말</li>
->>>>>>> Stashed changes
           <li>장날 신청: 이름, 휴대전화, 이메일(선택), 하는 일, 참가 회차, 이야기하고 싶은 고민(선택), 알게 된 경로</li>
           <li>매출 같은 민감한 숫자와 주민등록번호는 받지 않습니다.</li>
         </ul>

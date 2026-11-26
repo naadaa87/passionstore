@@ -846,10 +846,7 @@
         tile('상단 모임', fmt(G.cur.meetings) + '<small>번</small>', delta(G.cur.meetings, G.prev.meetings)) +
         tile('상단 모임 출석률', rate(G.cur.attendRate), delta(G.cur.attendRate, G.prev.attendRate, 'p')) +
         tile('장날 참석', fmt(F.jangnal[4].n) + '<small>명</small>', plain('신청 ' + F.jangnal[2].n + '명 가운데')) +
-<<<<<<< Updated upstream
         tile('가입 90일 뒤 남은 비율', rate(ratio(M.retention.kept, M.retention.total)), plain(M.retention.total ? '90일이 지난 가입 ' + M.retention.total + '명 기준' : '가입 90일이 지난 회원이 아직 없습니다')) +
-=======
->>>>>>> Stashed changes
         '</div>';
 
       /* ----- 홈페이지 ----- */
@@ -1284,10 +1281,6 @@
         sel('sangdan', sangdan, sangdanOpts, 'aria-label="상단" data-f="sangdan"') +
         '<form class="search" data-search><input name="q" type="search" value="' + h(q) + '" placeholder="이름, 연락처, 하는 일, 메모" aria-label="회원 검색"><button class="btn btn-line">찾기</button></form>' +
         '<span class="spacer"></span><span class="result-count">' + d.items.length + '명</span></div>' +
-<<<<<<< Updated upstream
-=======
-        (fee === 'due' ? '<div class="note"><p>회비가 미납이거나 납부 기한이 2주 안에 끝나는 활동 회원입니다.</p></div>' : '') +
->>>>>>> Stashed changes
         (d.items.length ? '<div class="tbl-wrap"><table class="tbl stack"><thead><tr><th>이름</th><th>하는 일</th><th>구분</th><th>상단</th><th>역할</th><th>가입일</th><th>상태</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
           : empty(q || tier || sangdan || fee ? '조건에 맞는 회원이 없습니다.' : '명부에 회원이 없습니다.', '<a href="#/applications?status=approved">가입 승인한 신청 보기</a>')), '회원 명부');
       if (!v) return;
@@ -1983,10 +1976,6 @@
      ====================================================================== */
   var SETTINGS = [
     { key: 'contact', title: '연락처', desc: '홈페이지 아래쪽 문의 칸에 나옵니다. 비워 둔 칸은 나오지 않습니다.', fields: [['email', '문의 이메일', 'email'], ['kakaoChannel', '카카오톡 채널 주소', 'url'], ['instagram', '인스타그램 주소', 'url'], ['naverBlog', '네이버 블로그 주소', 'url']] },
-<<<<<<< Updated upstream
-=======
-    { key: 'fees', title: '장날 참가비', desc: '장날 페이지의 참가비 칸에 그대로 나옵니다. 회비는 없습니다. “1만 원(다과 포함)”처럼 적습니다.', fields: [['guest', '장날 참가비']] },
->>>>>>> Stashed changes
     { key: 'team', title: '운영진 소개', desc: '소개 페이지의 “지금의 운영진”에 나옵니다. 맡은 일과 이름만 적습니다.' },
     { key: 'operator', title: '운영 정보', desc: '홈페이지 맨 아래와 개인정보 처리방침에 나옵니다.', fields: [['name', '운영 주체'], ['representative', '대표자'], ['registrationNo', '사업자등록번호'], ['address', '주소'], ['privacyOfficer', '개인정보 보호책임자'], ['privacyEmail', '개인정보 문의 이메일', 'email']] },
     { key: 'verification', title: '검색엔진 소유 확인', desc: '네이버 서치어드바이저, 구글 서치 콘솔, 빙 웹마스터 도구에서 받은 코드를 넣습니다. 네이버·구글·빙은 content 값만, 다음은 robots.txt에 넣으라는 한 줄 전체를 넣습니다.', fields: [['naver', '네이버'], ['google', '구글'], ['bing', '빙'], ['daumRobotsLine', '다음 robots.txt 한 줄']] },
@@ -2000,11 +1989,7 @@
       var data = s.data;
       var owner = isOwner();
       var dis = owner ? '' : ' disabled';
-<<<<<<< Updated upstream
       var html = '<div class="narrow">' + head('사이트 정보', { desc: '홈페이지 곳곳에 들어가는 연락처, 운영진 소개, 운영 정보입니다. 칸마다 따로 저장되고, 1~2분 뒤 홈페이지에 반영됩니다.' }) +
-=======
-      var html = '<div class="narrow">' + head('사이트 정보', { desc: '홈페이지 곳곳에 들어가는 연락처, 장날 참가비, 운영 정보입니다. 칸마다 따로 저장되고, 1~2분 뒤 홈페이지에 반영됩니다.' }) +
->>>>>>> Stashed changes
         (owner ? '' : '<div class="note"><p>사이트 정보는 회장 계정만 바꿀 수 있습니다. 고칠 내용이 있으면 회장에게 알려 주세요.</p></div>') +
         SETTINGS.map(function (sec) {
           var inner;

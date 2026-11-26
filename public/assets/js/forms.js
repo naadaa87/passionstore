@@ -3,16 +3,9 @@
   'use strict';
   var LABELS = {
     name: '이름', phone: '휴대전화', email: '이메일', region: '주로 일하는 지역', work: '하는 일',
-<<<<<<< Updated upstream
     bizType: '사업 형태', years: '업력', times: '참석하기 좋은 시간대',
     source: '알게 된 경로', message: '하고 싶은 말', session: '참가할 장날', question: '이야기하고 싶은 고민',
     consentPrivacy: '개인정보 동의'
-=======
-    bizType: '사업 형태', years: '업력', size: '함께 일하는 사람', times: '참석하기 좋은 시간대',
-    worry: '풀고 싶은 고민', goal: '1년 뒤 바라는 변화', canHelp: '도울 수 있는 것', avoid: '불편한 업종',
-    source: '알게 된 경로', message: '하고 싶은 말', roles: '맡아 보고 싶은 역할', session: '참가할 장날', question: '이야기하고 싶은 고민',
-    consentCharter: '헌장 동의', consentPrivacy: '개인정보 동의'
->>>>>>> Stashed changes
   };
   var TITLES = { apply: '상회원 가입 신청', jangnal: '장날 참가 신청' };
 
@@ -103,7 +96,6 @@
     });
   }
 
-<<<<<<< Updated upstream
   /* 개인정보 처리방침: 신청서를 쓰던 화면을 떠나지 않도록 창 위에 띄워 보여 줍니다. */
   var privacyDialog = null;
   function openPrivacy(link) {
@@ -157,47 +149,6 @@
       if (e.metaKey || e.ctrlKey || e.shiftKey) return;
       if (openPrivacy(a)) e.preventDefault();
     });
-=======
-  /* 개인정보 처리방침 — 다른 페이지로 넘어가면 쓰던 신청서가 지워지므로 같은 화면의 팝업으로 연다 */
-  var policyDlg = null;
-  function openPolicy(href) {
-    if (typeof HTMLDialogElement !== 'function') { window.open(href, '_blank', 'noopener'); return; }
-    if (!policyDlg) {
-      policyDlg = document.createElement('dialog');
-      policyDlg.className = 'policy-dlg';
-      policyDlg.setAttribute('aria-labelledby', 'policy-dlg-title');
-      policyDlg.innerHTML = '<div class="policy-dlg-head"><h2 id="policy-dlg-title">개인정보 처리방침</h2>' +
-        '<button type="button" class="policy-dlg-x" aria-label="닫기">×</button></div>' +
-        '<div class="policy-dlg-body" tabindex="0"><p>불러오는 중…</p></div>' +
-        '<div class="policy-dlg-foot"><a href="' + href + '" target="_blank" rel="noopener">새 창으로 보기</a>' +
-        '<button type="button" class="btn btn-primary policy-dlg-ok">확인했습니다</button></div>';
-      document.body.appendChild(policyDlg);
-      var close = function () { policyDlg.close(); };
-      policyDlg.querySelector('.policy-dlg-x').addEventListener('click', close);
-      policyDlg.querySelector('.policy-dlg-ok').addEventListener('click', close);
-      policyDlg.addEventListener('click', function (e) { if (e.target === policyDlg) close(); });
-      fetch(href, { credentials: 'same-origin' }).then(function (r) { return r.text(); }).then(function (html) {
-        var doc = new DOMParser().parseFromString(html, 'text/html');
-        var parts = doc.querySelectorAll('main .policy .wrap');
-        var body = policyDlg.querySelector('.policy-dlg-body');
-        if (!parts.length) throw new Error('empty');
-        body.innerHTML = '';
-        Array.prototype.forEach.call(parts, function (p) {
-          Array.prototype.forEach.call(p.querySelectorAll('a[href^="/"]'), function (a) { a.target = '_blank'; a.rel = 'noopener'; });
-          body.appendChild(document.importNode(p, true));
-        });
-      }).catch(function () {
-        policyDlg.querySelector('.policy-dlg-body').innerHTML = '<p>처리방침을 불러오지 못했습니다. 아래 “새 창으로 보기”를 눌러 주세요. 쓰던 신청서는 그대로 남아 있습니다.</p>';
-      });
-    }
-    policyDlg.showModal();
-  }
-  document.addEventListener('click', function (e) {
-    var a = e.target.closest && e.target.closest('[data-privacy-open]');
-    if (!a) return;
-    e.preventDefault();
-    openPolicy(a.getAttribute('href') || '/privacy');
->>>>>>> Stashed changes
   });
 
   Array.prototype.forEach.call(document.querySelectorAll('.js-form'), function (form) {
