@@ -14,7 +14,13 @@ window.SITE_CONFIG = {
     "privacyOfficer": "",
     "privacyEmail": ""
   },
+<<<<<<< Updated upstream
   "fees": {},
+=======
+  "fees": {
+    "guest": "첫 장날 공지 때 안내"
+  },
+>>>>>>> Stashed changes
   "jangnal": [],
   "team": []
 };

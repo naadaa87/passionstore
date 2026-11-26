@@ -317,7 +317,7 @@ async function convertApplication({ db, request, segs, admin }) {
        joined_at, fee_status, fee_paid_until, verified, charter_signed, founding, source, application_id, memo, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, '', ?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?)`,
     id, r.name, r.phone, r.email, clip(d.work, 500), clip(d.bizType, 40), clip(d.region, 60), clip(d.years, 20), clip(d.size, 30), clip(d.times, 60),
-    tier, sangdanId, optDate(b.joined_at, '가입일') || today(), oneOf(b.fee_status || 'unpaid', FEES, '회비 상태'), optDate(b.fee_paid_until, '회비 납부 기한'),
+    tier, sangdanId, optDate(b.joined_at, '가입일') || today(), oneOf(b.fee_status || 'exempt', FEES, '회비 상태'), optDate(b.fee_paid_until, '회비 납부 기한'),
     bool(b.verified), bool(b.charter_signed), bool(b.founding), r.source || '', r.id, t, t);
   await run(db, "UPDATE applications SET status = 'joined', member_id = ?, updated_at = ? WHERE id = ?", id, t, r.id);
   await memberEvent(db, id, 'join', tier, optDate(b.joined_at, '가입일') || today()).run();
@@ -393,7 +393,7 @@ function memberValues(b, cur) {
 async function createMember({ db, request, admin }) {
   const b = await readJson(request);
   const empty = {
-    tier: 'member', status: 'active', fee_status: 'unpaid', roles: '', memo: '', verified: 0, charter_signed: 0, founding: 0,
+    tier: 'member', status: 'active', fee_status: 'exempt', roles: '', memo: '', verified: 0, charter_signed: 0, founding: 0,
     sangdan_id: null, joined_at: null, paused_until: null, fee_paid_until: null,
   };
   const m = memberValues(b, empty);
@@ -608,7 +608,7 @@ function validateSection(section, v) {
   switch (section) {
     case 'contact': return { email: str(v.email, 120), kakaoChannel: str(v.kakaoChannel, 200), instagram: str(v.instagram, 200), naverBlog: str(v.naverBlog, 200) };
     case 'operator': return { name: str(v.name, 60) || '열정상회', representative: str(v.representative, 40), registrationNo: str(v.registrationNo, 40), address: str(v.address, 200), privacyOfficer: str(v.privacyOfficer, 40), privacyEmail: str(v.privacyEmail, 120) };
-    case 'fees': return { guest: str(v.guest, 80), sarangbang: str(v.sarangbang, 80), member: str(v.member, 120), note: str(v.note, 300) };
+    case 'fees': return { guest: str(v.guest, 80) };
     case 'verification': return { naver: str(v.naver, 120), google: str(v.google, 120), bing: str(v.bing, 120), daumRobotsLine: str(v.daumRobotsLine, 200) };
     case 'url': {
       const u = str(v, 200).replace(/\/+$/, '');
@@ -846,7 +846,7 @@ async function exportCsv({ db, admin, request }) {
     body = csv(rows, type === 'jangnal'
       ? [['created_at', '접수'], ['status', '상태'], ['session', '장날 날짜'], ['sessionLabel', '장날'], ['name', '이름'], ['phone', '휴대전화'], ['email', '이메일'], ['work', '하는 일'], ['question', '고민'], ['source', '경로'], ['memo', '메모']]
       : [['created_at', '접수'], ['status', '상태'], ['name', '이름'], ['phone', '휴대전화'], ['email', '이메일'], ['region', '지역'], ['work', '하는 일'], ['bizType', '형태'],
-        ['years', '업력'], ['size', '규모'], ['times', '시간대'], ['worry', '고민'], ['goal', '1년 뒤'], ['canHelp', '도울 수 있는 것'], ['avoid', '불편한 업종'],
+        ['years', '업력'], ['size', '규모'], ['times', '시간대'], ['worry', '고민'], ['goal', '1년 뒤'], ['canHelp', '도울 수 있는 것'], ['avoid', '불편한 업종'], ['message', '하고 싶은 말'],
         ['source', '경로'], ['roles', '관심 역할'], ['memo', '메모']]);
     name = type === 'jangnal' ? 'jangnal-applications' : 'applications';
   }

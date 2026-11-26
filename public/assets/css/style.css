@@ -766,3 +766,20 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
   .who-list strong { font-size: 22px; margin-bottom: 4px; }
   .who-list a::after { margin-top: 8px; justify-self: start; }
 }
+
+/* 신청서: 선택 항목 표시 */
+.field .opt, .field legend .opt { font-weight: 400; font-size: 13px; color: var(--ink-3); margin-left: 4px; }
+
+/* 개인정보 처리방침 팝업 (신청서를 쓰는 중에도 내용이 지워지지 않게) */
+.policy-dlg { width: min(680px, calc(100vw - 32px)); max-height: min(82vh, 760px); padding: 0; border: 0; border-radius: 14px; box-shadow: 0 24px 60px rgba(0, 0, 0, .22); color: var(--ink); display: flex; flex-direction: column; }
+.policy-dlg:not([open]) { display: none; }
+.policy-dlg::backdrop { background: rgba(20, 16, 14, .45); }
+.policy-dlg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px 12px; border-bottom: 1px solid var(--line, #e6e0da); }
+.policy-dlg-head h2 { font-size: 20px; margin: 0; }
+.policy-dlg-x { width: 36px; height: 36px; border: 0; background: none; font-size: 26px; line-height: 1; cursor: pointer; color: var(--ink); border-radius: 8px; }
+.policy-dlg-x:hover { background: var(--brick-tint); }
+.policy-dlg-body { overflow: auto; padding: 8px 22px 16px; font-size: 15px; line-height: 1.75; }
+.policy-dlg-body h2 { font-size: 16px; margin: 18px 0 6px; }
+.policy-dlg-body ul { padding-left: 1.2em; margin: 0; }
+.policy-dlg-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 22px 18px; border-top: 1px solid var(--line, #e6e0da); }
+.policy-dlg-foot a { font-size: 14px; color: var(--ink-3); }
