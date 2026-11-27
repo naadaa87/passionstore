@@ -250,6 +250,12 @@ input[aria-invalid="true"] { border-color: var(--brick); }
 .article-body hr { border: 0; border-top: 1px solid var(--rule); margin: 2em 0; }
 .article-body .note-box { margin: 1.8em 0; padding: 16px 18px; border: 1px solid var(--rule-2); border-left: 5px solid var(--brick); font-size: 15px; }
 .article-body .note-box p { margin: 0; }
+.article-body .summary-box { margin: 0 0 1.6em; padding: 12px 0 4px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule-2); }
+.article-body .summary-box .summary-title { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--brick); }
+.article-body .table-wrap { overflow-x: auto; margin: 0 0 1.4em; }
+.article-body .table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.article-body .table th, .article-body .table td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+.article-body .table thead th { border-bottom: 2px solid var(--ink); font-size: 13px; color: var(--ink-2); }
 .article-body img { max-width: 100%; height: auto; }
 .article-body figure { margin: 1.6em 0; }
 .article-body figcaption { font-size: 13px; color: var(--ink-3); margin-top: 6px; }

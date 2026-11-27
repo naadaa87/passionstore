@@ -4,5 +4,6 @@
 - 페이지 문구는 `tools/pages.js`, `tools/personas.js`, `tools/faq.js`, 상회보 글은 `content/journal/*.md`, 설정은 `site.json`에 있습니다. `public/`의 HTML·sitemap·rss·robots·site-config.js는 빌드 결과물이므로 직접 고치지 말고 원본을 고친 뒤 `node tools/build.js`를 실행해 함께 커밋합니다.
 - 문구는 자연스러운 한국어로, 과장 없이 씁니다. 회장 개인을 내세우지 않습니다(홍보의 주인공은 회원과 모임). 기수제가 아닌 상시 운영 모임입니다.
 - 디자인: 흰 바탕, 벽돌 레드 #B5402A 포인트, 호박색 #E3A33B 보조. 제목 Black Han Sans, 본문 IBM Plex Sans KR.
-- 검색 노출 운영은 `docs/seo-guide.md`를 따릅니다. 새 글은 키워드 지도에서 겹치지 않는 말을 고릅니다.
+- 검색 노출 운영은 `docs/seo-guide.md`를 따릅니다. 새 글은 키워드 지도에서 겹치지 않는 말을 고릅니다. 글에는 맨 위 `:::summary` 요점 상자와 끝의 `## 자주 묻는 질문`(질문은 `###`)을 넣습니다.
+- 열정상회의 기본 사실(회비 없음, 모임 방식, 지역, 가입 방법)은 `tools/facts.js`, `tools/faq.js`, `tools/glossary.js` 세 곳에 함께 적혀 있습니다. 하나를 고치면 나머지도 맞춥니다. `public/llms.txt`·`llms-full.txt`·`<indexNowKey>.txt`도 빌드 결과물입니다.
 - 관리자 화면 원본은 `admin/`(화면)과 `server/`·`functions/api/admin/`(API)에 있습니다. `public/admin/`은 빌드가 복사한 결과물이니 직접 고치지 않습니다. 운영 데이터(신청·회원·상단)는 D1, 사이트 내용(장날 일정·상회보·사이트 정보)은 GitHub 커밋으로 저장합니다. 설정과 사용법은 `docs/admin-guide.md`.

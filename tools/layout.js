@@ -32,7 +32,7 @@ function footer() {
       <div class="footer-grid">
         <div>
           <a class="logo" href="/">열정상회</a>
-          <p class="footer-tag">업에 진심인 사람들의 모임.<br>사업자·자영업자·프리랜서·1인 창업자가 함께 공부하고 서로 돕는 서울의 사업자 커뮤니티입니다.</p>
+          <p class="footer-tag">업에 진심인 사람들의 모임.<br>사업자·자영업자·프리랜서·1인 창업자가 회비 없이 함께 공부하고 서로 돕는 서울의 사업자 커뮤니티입니다.</p>
         </div>
         <div>
           <h2>둘러보기</h2>
@@ -43,6 +43,7 @@ function footer() {
             <li><a href="/journal/">상회보</a></li>
             <li><a href="/charter">상회 헌장</a></li>
             <li><a href="/faq">자주 묻는 질문</a></li>
+            <li><a href="/glossary">용어 사전</a></li>
             <li><a href="/join">가입 안내</a></li>
           </ul>
         </div>
@@ -83,8 +84,10 @@ function ld(obj) {
 }
 
 function breadcrumbLd(site, items) {
+  const last = items[items.length - 1];
   return {
     '@type': 'BreadcrumbList',
+    '@id': site.url + (last[1] || '') + '#breadcrumb',
     itemListElement: items.map(([label, path], i) => ({
       '@type': 'ListItem',
       position: i + 1,
@@ -100,21 +103,46 @@ function orgLd(site) {
     '@type': 'Organization',
     '@id': site.url + '/#organization',
     name: '열정상회',
-    alternateName: '熱情商會',
+    alternateName: ['熱情商會', '열정 상회'],
     url: site.url + '/',
-    logo: site.url + '/assets/img/logo-512.png',
+    logo: { '@type': 'ImageObject', url: site.url + '/assets/img/logo-512.png', width: 512, height: 512 },
     image: site.url + '/assets/img/og-image.png',
-    description: '사업자, 자영업자, 프리랜서, 1인 창업자가 모여 고민을 나누고 함께 공부하는 사업자 커뮤니티',
+    description: '사업자, 자영업자, 프리랜서, 1인 창업자가 회비 없이 모여 고민을 나누고 함께 공부하며 서로 돕는 서울의 사업자 커뮤니티',
     slogan: '업에 진심인 사람들의 모임',
-    areaServed: { '@type': 'City', name: '서울' },
+    areaServed: { '@type': 'City', name: '서울', containedInPlace: { '@type': 'Country', name: '대한민국' } },
+    audience: { '@type': 'BusinessAudience', audienceType: '사업자, 자영업자, 소상공인, 프리랜서, 1인 창업자, 중소기업 대표' },
+    knowsAbout: ['사업자 모임', '자영업자 모임', '프리랜서 모임', '소상공인', '1인 사업자', '사업자 네트워킹', '마스터마인드 그룹', '핫시트', '소그룹 운영', '사업자 협업'],
+    ethicsPolicy: site.url + '/charter',
+    makesOffer: {
+      '@type': 'Offer',
+      name: '열정상회 가입 (회비 없음)',
+      price: 0,
+      priceCurrency: 'KRW',
+      url: site.url + '/join',
+      eligibleCustomerType: '사업자등록이 있거나 프리랜서 소득이 확인되는 사람',
+    },
   };
   if (sameAs.length) org.sameAs = sameAs;
   if (site.contact.email) org.email = site.contact.email;
   return org;
 }
 
+function websiteLd(site) {
+  return {
+    '@type': 'WebSite',
+    '@id': site.url + '/#website',
+    url: site.url + '/',
+    name: '열정상회',
+    alternateName: ['熱情商會', '열정 상회'],
+    description: '사업자·자영업자·프리랜서가 회비 없이 함께하는 서울의 사업자 커뮤니티 열정상회의 홈페이지',
+    inLanguage: 'ko-KR',
+    publisher: { '@id': site.url + '/#organization' },
+  };
+}
+
 /**
- * page({ path, title, desc, keywords, body, active, forms, graph, type, image, imageAlt, imageSize, noindex })
+ * page({ path, title, desc, keywords, body, active, forms, graph, type, image, imageAlt, imageSize, noindex, modified })
+ * modified: 이 페이지 내용이 마지막으로 바뀐 날(YYYY-MM-DD). 없으면 site.updated
  * path: '/about' 처럼 사이트 안의 주소
  */
 function page(site, o) {
@@ -140,17 +168,17 @@ function page(site, o) {
       inLanguage: 'ko-KR',
       isPartOf: { '@id': site.url + '/#website' },
       about: { '@id': site.url + '/#organization' },
+      publisher: { '@id': site.url + '/#organization' },
+      dateModified: `${o.modified || site.updated}T09:00:00+09:00`,
+      primaryImageOfPage: { '@type': 'ImageObject', url: image },
+      // 한두 문장으로 답이 되는 자리(제목, 첫 문단, 요점 상자, 한눈에 보기 표)
+      speakable: { '@type': 'SpeakableSpecification', cssSelector: ['h1', '.lead', '.summary-box', '.facts'] },
     },
     ...(o.graph || []),
   ];
-  if (o.path === '/') {
-    graph.unshift(
-      { '@type': 'WebSite', '@id': site.url + '/#website', url: site.url + '/', name: '열정상회', alternateName: '熱情商會', inLanguage: 'ko-KR', publisher: { '@id': site.url + '/#organization' } },
-      orgLd(site)
-    );
-  } else {
-    graph.push(orgLd(site));
-  }
+  const crumb = graph.find((g) => g['@type'] === 'BreadcrumbList');
+  if (crumb) graph[0].breadcrumb = { '@id': crumb['@id'] };
+  graph.push(websiteLd(site), orgLd(site));
 
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -160,8 +188,10 @@ function page(site, o) {
   <title>${esc(fullTitle)}</title>
   <meta name="description" content="${esc(o.desc)}">
   ${o.keywords ? `<meta name="keywords" content="${esc(o.keywords)}">` : ''}
-  <meta name="robots" content="${o.noindex ? 'noindex,follow' : 'index,follow,max-image-preview:large'}">
+  <meta name="robots" content="${o.noindex ? 'noindex,follow' : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'}">
+  <meta name="author" content="열정상회">
   <link rel="canonical" href="${url}">
+  <link rel="alternate" hreflang="ko" href="${url}">
   ${verify}
   <meta property="og:type" content="${o.ogType || 'website'}">
   <meta property="og:site_name" content="열정상회">

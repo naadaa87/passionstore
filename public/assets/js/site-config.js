@@ -14,7 +14,6 @@ window.SITE_CONFIG = {
     "privacyOfficer": "",
     "privacyEmail": ""
   },
-  "fees": {},
   "jangnal": [],
   "team": []
 };

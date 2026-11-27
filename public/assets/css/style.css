@@ -766,3 +766,54 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
   .who-list strong { font-size: 22px; margin-bottom: 4px; }
   .who-list a::after { margin-top: 8px; justify-self: start; }
 }
+
+/* ---------- 한눈에 보기 (홈·소개) ---------- */
+.glance .definition { max-width: 860px; padding-left: 18px; border-left: 4px solid var(--brick); color: var(--ink); font-size: 19px; line-height: 1.75; }
+.facts { margin: 32px 0 0; border-top: 2px solid var(--ink); display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; }
+.facts > div { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--rule); }
+.facts dt { font-weight: 700; color: var(--ink); }
+.facts dd { margin: 0; color: var(--ink-2); font-size: 16px; line-height: 1.7; }
+.facts dd a { color: var(--brick); font-weight: 600; text-underline-offset: 3px; }
+
+/* ---------- 자주 묻는 질문: 질문은 소제목 ---------- */
+.faq summary h3 { display: inline; font: inherit; margin: 0; letter-spacing: 0; }
+
+/* ---------- 글 머리 요점 상자, 글 속 표 ---------- */
+.summary-box { margin: 0 0 2em; padding: 18px 0 8px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule-strong); }
+.summary-box .summary-title { margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--brick); }
+.article-body .summary-box ul { margin: 0 0 0.6em; }
+.article-body .summary-box li { font-size: 17px; line-height: 1.7; color: var(--ink); }
+.article-body .table-wrap { margin: 0 0 1.6em; }
+.article-body .table { min-width: 480px; }
+.article-body .table th, .article-body .table td { font-size: 16px; line-height: 1.65; padding: 12px 12px; }
+.article-body .table tbody th { white-space: normal; min-width: 96px; }
+
+/* ---------- 용어 사전 ---------- */
+.term-list { margin: 32px 0 0; border-top: 2px solid var(--ink); max-width: 900px; }
+.term-list > div { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 8px 32px; padding: 22px 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 96px; }
+.term-list > div:target { background: var(--brick-tint); box-shadow: -16px 0 0 var(--brick-tint), 16px 0 0 var(--brick-tint); }
+.term-list dt { font-weight: 700; font-size: 18px; color: var(--brick); line-height: 1.5; }
+.term-list dd { margin: 0; }
+.term-list dd p { margin: 0; color: var(--ink); max-width: var(--text); }
+.term-list .term-more { margin-top: 8px; font-size: 15px; display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.term-list .term-more a { color: var(--brick); font-weight: 600; text-underline-offset: 3px; }
+
+/* ---------- 상회보: 주제별로 보기 ---------- */
+.topic-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 40px; margin-top: 28px; border-top: 2px solid var(--ink); }
+.topic-grid > div { padding: 20px 0 12px; border-bottom: 1px solid var(--rule); }
+.topic-grid h3 { font-size: 15px; color: var(--brick); margin-bottom: 8px; }
+.topic-grid ul { list-style: none; padding: 0; margin: 0; }
+.topic-grid li { margin-bottom: 8px; font-size: 16px; line-height: 1.55; }
+.topic-grid a { color: var(--ink); text-decoration: none; }
+.topic-grid a:hover { color: var(--brick); text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 860px) {
+  .facts { grid-template-columns: 1fr; }
+  .topic-grid { grid-template-columns: 1fr 1fr; }
+  .term-list > div { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .glance .definition { font-size: 17px; padding-left: 14px; }
+  .facts > div { grid-template-columns: 1fr; gap: 4px; }
+  .topic-grid { grid-template-columns: 1fr; }
+}

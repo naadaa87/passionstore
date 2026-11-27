@@ -38,7 +38,7 @@ module.exports = [
       ['직원이나 가족이 함께 와도 되나요?', '상회원은 사업자 본인이 대상입니다. 장날은 공개 모임이라 함께 일하는 분도 손님으로 오실 수 있습니다.'],
       ['같은 동네 사장님과 만나면 불편하지 않을까요?', '같은 상권의 같은 업종은 다른 상단으로 나눕니다. 상단에서 들은 이야기는 밖으로 가져가지 않는 것이 헌장 2조입니다.'],
     ],
-    articles: ['price-increase-test', 'small-business-support-info', 'choosing-business-group'],
+    articles: ['price-increase-test', 'online-vs-offline-community', 'small-business-support-info', 'business-types-explained'],
   },
   {
     slug: 'freelancers',
@@ -78,7 +78,7 @@ module.exports = [
       ['일감을 소개받을 수 있나요?', '열정상회는 일감 중개를 하지 않습니다. 다만 품앗이판에서 서로 필요한 일을 공개된 조건으로 주고받는 일은 자연스럽게 생깁니다. 먼저 파는 것은 헌장 3조로 막습니다.'],
       ['같은 직군 사람도 있나요?', '있을 수 있지만 같은 상단에는 되도록 넣지 않습니다. 같은 직군끼리의 이야기는 장날이나 사랑방 채널에서 나눌 수 있습니다.'],
     ],
-    articles: ['freelancer-rates', 'alone-in-business', 'action-ledger'],
+    articles: ['freelancer-rates', 'alone-in-business', 'business-types-explained', 'networking-first-time'],
   },
   {
     slug: 'founders',
@@ -118,7 +118,7 @@ module.exports = [
       ['투자자를 만날 수 있나요?', '열정상회는 투자를 중개하지 않습니다. 회원끼리 투자를 권유하는 일도 헌장 4조로 금지합니다. 대신 투자를 받아 본 회원의 경험은 상단에서 들을 수 있습니다.'],
       ['기술 창업이 아니어도 괜찮나요?', '물론입니다. 온라인 쇼핑몰, 로컬 브랜드, 교육, 서비스업처럼 업종에 상관없이 창업 초기라면 함께할 수 있습니다.'],
     ],
-    articles: ['mastermind-group', 'hot-seat', 'action-ledger', 'small-business-support-info'],
+    articles: ['who-to-ask', 'business-study-group', 'collaboration-checklist', 'small-business-support-info'],
   },
   {
     slug: 'ceos',
@@ -158,6 +158,6 @@ module.exports = [
       ['직원 이야기가 밖으로 새지 않을까요?', '상단에서 들은 이야기는 상단 안에 두는 것이 헌장 2조입니다. 녹음과 캡처를 하지 않고, 상회보에 실을 때도 당사자 동의를 받아 회사를 알 수 없게 정리합니다.'],
       ['규모가 큰 회사 대표도 가입할 수 있나요?', '규모 제한은 없습니다. 다만 지금의 상단은 소상공인과 소규모 회사 대표 중심이라, 먼저 겪어 본 사람으로서 경험을 나누는 역할을 기대하게 됩니다.'],
     ],
-    articles: ['mastermind-group', 'hot-seat', 'charter-explained'],
+    articles: ['mastermind-group', 'hot-seat', 'who-to-ask', 'free-business-group'],
   },
 ];

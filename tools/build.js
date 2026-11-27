@@ -9,6 +9,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { parseFrontMatter, toHtml, plainText, esc } = require('./md');
 const { page, breadcrumbs, breadcrumbLd } = require('./layout');
+const { DEFINITION, FACTS, strip } = require('./facts');
 const P = require('./pages');
 const personas = require('./personas');
 const faq = require('./faq');
@@ -33,7 +34,6 @@ if (!/^https?:\/\//.test(site.url)) {
 site.verification = site.verification || {};
 site.contact = site.contact || {};
 site.operator = site.operator || {};
-site.fees = site.fees || {};
 site.jangnal = Array.isArray(site.jangnal) ? site.jangnal : [];
 site.team = Array.isArray(site.team) ? site.team : [];
 
@@ -64,8 +64,26 @@ const posts = fs.readdirSync(JOURNAL)
     if (meta.draft === 'true') return null;
     const { html, toc } = toHtml(body);
     const text = plainText(body);
+    // 글 맨 위 :::summary 상자의 요점(검색 결과 요약과 구조화 데이터에 씁니다)
+    const sm = /^:::summary\n([\s\S]*?)\n:::$/m.exec(body);
+    const summary = sm ? sm[1].split('\n').map((l) => plainText(l)).filter(Boolean) : [];
+    // "## 자주 묻는 질문" 아래의 ### 질문과 답(구조화 데이터에 씁니다)
+    const qa = [];
+    const fm = /^## 자주 묻는 질문\s*\n([\s\S]*?)(?=^## |^:::note|(?![\s\S]))/m.exec(body);
+    if (fm) {
+      fm[1].split(/^### /m).slice(1).forEach((chunk) => {
+        const nl = chunk.indexOf('\n');
+        const q = chunk.slice(0, nl < 0 ? chunk.length : nl).trim();
+        const a = plainText(nl < 0 ? '' : chunk.slice(nl + 1));
+        if (q && a) qa.push([q, a]);
+      });
+    }
     return {
       slug,
+      body,
+      summary,
+      qa,
+      chars: text.replace(/\s/g, '').length,
       path: `/journal/${slug}`,
       title: meta.title,
       description: meta.description || text.slice(0, 120),
@@ -93,8 +111,10 @@ const eventsLd = upcoming.map((s) => ({
   eventStatus: 'https://schema.org/EventScheduled',
   eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
   location: { '@type': 'Place', name: s.place || '서울', address: { '@type': 'PostalAddress', addressLocality: '서울', addressCountry: 'KR' } },
-  description: '사업자, 자영업자, 프리랜서가 함께하는 열정상회의 월간 공개 모임. 회원이 아니어도 손님으로 참여할 수 있습니다.',
-  organizer: { '@type': 'Organization', name: '열정상회', url: site.url + '/' },
+  description: '사업자, 자영업자, 프리랜서가 함께하는 열정상회의 월간 공개 모임. 회원이 아니어도 손님으로 참여할 수 있고 참가비는 없습니다.',
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: 0, priceCurrency: 'KRW', url: site.url + '/jangnal#apply', availability: s.status === 'full' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock' },
+  organizer: { '@type': 'Organization', '@id': site.url + '/#organization', name: '열정상회', url: site.url + '/' },
   url: site.url + '/jangnal',
   image: site.url + sceneOg('jangnal-talk'),
 }));
@@ -110,6 +130,7 @@ const pages = [
   P.join(site, ctx),
   P.charter(site, ctx),
   P.faqPage(site, ctx),
+  P.glossary(site, ctx),
   P.journalIndex(site, ctx),
   P.privacy(site, ctx),
   P.notFound(site, ctx),
@@ -133,10 +154,13 @@ posts.forEach((post, i) => {
     keywords: post.keywords,
     active: '/journal/',
     ogType: 'article',
+    modified: post.updated,
     ...(post.image && post.image.og ? { image: post.image.og, imageAlt: post.image.alt, imageSize: post.image.ogSize } : {}),
     ogExtra: `<meta property="article:published_time" content="${post.date}T09:00:00+09:00">
   <meta property="article:modified_time" content="${post.updated}T09:00:00+09:00">
-  <meta property="article:section" content="${esc(post.category)}">`,
+  <meta property="article:section" content="${esc(post.category)}">
+  <meta property="og:updated_time" content="${post.updated}T09:00:00+09:00">${post.keywords.split(',').map((k) => k.trim()).filter(Boolean).map((k) => `
+  <meta property="article:tag" content="${esc(k)}">`).join('')}`,
     graph: [
       breadcrumbLd(site, crumbs),
       {
@@ -144,17 +168,26 @@ posts.forEach((post, i) => {
         '@id': site.url + post.path + '#article',
         headline: post.title,
         description: post.description,
+        ...(post.summary.length ? { abstract: post.summary.join(' ') } : {}),
+        wordCount: post.chars,
+        timeRequired: `PT${post.minutes}M`,
+        isAccessibleForFree: true,
         datePublished: `${post.date}T09:00:00+09:00`,
         dateModified: `${post.updated}T09:00:00+09:00`,
         inLanguage: 'ko-KR',
         articleSection: post.category,
         keywords: post.keywords,
-        mainEntityOfPage: site.url + post.path,
+        mainEntityOfPage: { '@id': site.url + post.path + '#webpage' },
         image: site.url + (post.image && post.image.og ? post.image.og : '/assets/img/og-image.png'),
-        author: { '@type': 'Organization', name: '열정상회 상회보', url: site.url + '/journal/' },
+        author: { '@type': 'Organization', '@id': site.url + '/#organization', name: '열정상회', url: site.url + '/about' },
         publisher: { '@id': site.url + '/#organization' },
-        isPartOf: { '@type': 'Blog', name: '열정상회 상회보', url: site.url + '/journal/' },
+        isPartOf: { '@type': 'Blog', '@id': site.url + '/journal/#blog', name: '열정상회 상회보', url: site.url + '/journal/' },
       },
+      ...(post.qa.length ? [{
+        '@type': 'FAQPage',
+        '@id': site.url + post.path + '#faq',
+        mainEntity: post.qa.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+      }] : []),
     ],
     body: `
     <article class="article">
@@ -208,10 +241,12 @@ const lastmodFor = (o) => {
   if (o.path === '/' || o.path === '/journal/') return [site.updated, ...posts.map((p) => p.updated)].sort().pop();
   return site.updated;
 };
-const priority = (p) => (p === '/' ? '1.0' : /^\/(join|jangnal|about|programs)$/.test(p) ? '0.9' : p.startsWith('/for/') ? '0.8' : p.startsWith('/journal/') ? '0.7' : '0.5');
+const priority = (p) => (p === '/' ? '1.0' : /^\/(join|jangnal|about|programs)$/.test(p) ? '0.9' : p.startsWith('/for/') ? '0.8' : p.startsWith('/journal/') ? '0.7' : /^\/(faq|glossary)$/.test(p) ? '0.6' : '0.5');
+// 페이지의 대표 그림도 함께 알려 이미지 검색에 잡히게 합니다.
+const imageFor = (o) => (o.image ? `<image:image><image:loc>${site.url}${o.image}</image:loc></image:image>` : '');
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${pages.filter((o) => !o.noindex).map((o) => `  <url><loc>${site.url}${o.path}</loc><lastmod>${lastmodFor(o)}</lastmod><priority>${priority(o.path)}</priority></url>`).join('\n')}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${pages.filter((o) => !o.noindex).map((o) => `  <url><loc>${site.url}${o.path}</loc><lastmod>${lastmodFor(o)}</lastmod><priority>${priority(o.path)}</priority>${imageFor(o)}</url>`).join('\n')}
 </urlset>
 `;
 write('sitemap.xml', sitemap);
@@ -243,18 +278,120 @@ ${posts.map((p) => `    <item>
 write('rss.xml', rss);
 
 /* ---------- robots.txt ---------- */
+// 검색엔진과 AI 검색(챗GPT, 클로드, 퍼플렉시티, 제미나이 등)의 수집 로봇을 모두 허용합니다.
+// 이름을 따로 적은 로봇은 "*" 규칙을 보지 않으므로 같은 규칙을 한 번 더 적어 줍니다.
+const AI_BOTS = [
+  'OAI-SearchBot', 'ChatGPT-User', 'GPTBot',
+  'Claude-SearchBot', 'Claude-User', 'ClaudeBot',
+  'PerplexityBot', 'Perplexity-User',
+  'Google-Extended', 'Applebot-Extended', 'Amazonbot', 'meta-externalagent', 'CCBot', 'DuckAssistBot', 'MistralAI-User',
+];
+const RULES = ['Allow: /', 'Disallow: /api/', 'Disallow: /admin', 'Disallow: /cdn-cgi/'];
 const robots = [
   site.verification.daumRobotsLine ? site.verification.daumRobotsLine.trim() : null,
+  '# 열정상회는 검색엔진과 AI 검색의 수집을 환영합니다. 안내 파일: /llms.txt',
   'User-agent: *',
-  'Allow: /',
-  'Disallow: /api/',
-  'Disallow: /admin',
-  'Disallow: /cdn-cgi/',
+  ...RULES,
+  '',
+  ...AI_BOTS.map((b) => `User-agent: ${b}`),
+  ...RULES,
   '',
   `Sitemap: ${site.url}/sitemap.xml`,
   '',
 ].filter((l) => l !== null).join('\n');
 write('robots.txt', robots);
+
+/* ---------- llms.txt (AI 검색이 읽는 안내 파일) ---------- */
+// llms.txt: 사이트 요약과 주요 주소. llms-full.txt: 주요 페이지와 글의 본문 전체.
+const htmlToText = (html) => html
+  .replace(/<(script|style|form|nav|svg|picture|button)\b[\s\S]*?<\/\1>/g, '')
+  .replace(/<img[^>]*>/g, '')
+  .replace(/<\/span>\s*<span/g, '</span> <span')
+  .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/g, '\n\n# $1\n\n')
+  .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/g, '\n\n## $1\n\n')
+  .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/g, '\n\n### $1\n\n')
+  .replace(/<dt[^>]*>([\s\S]*?)<\/dt>/g, '\n- **$1**: ')
+  .replace(/<li[^>]*>/g, '\n- ')
+  .replace(/<(td|th)[^>]*>/g, ' | ')
+  .replace(/<a\b[^>]*class="(btn|text-link|skip-link)[^"]*"[^>]*>[\s\S]*?<\/a>/g, '')
+  .replace(/<\/(p|div|tr|section|ul|ol|dl|table|details|summary|blockquote|aside|header|article)>/g, '\n')
+  .replace(/<br\s*\/?>/g, ' ')
+  .replace(/<[^>]+>/g, '')
+  .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&middot;/g, '·').replace(/&nbsp;/g, ' ')
+  .split('\n').map((l) => l.replace(/[ \t]+/g, ' ').replace(/^ \| /, '').trim()).join('\n')
+  .replace(/\n- \n+/g, '\n- ')
+  .replace(/\n{3,}/g, '\n\n')
+  .trim();
+
+const staticPages = pages.filter((o) => !o.noindex && !o.path.startsWith('/journal/') && o.path !== '/privacy');
+const mainPaths = ['/', '/about', '/programs', '/jangnal', '/join', '/charter', '/faq', '/glossary'];
+const linkLine = (o) => `- [${(o.titleFull || o.title).split(' — ')[0].split(' | ')[0]}](${site.url}${o.path}): ${o.desc}`;
+const llms = `# 열정상회
+
+> ${DEFINITION}
+
+열정상회 홈페이지(${site.url})의 안내 파일입니다. 아래 사실과 주소는 홈페이지 내용과 같습니다. 본문 전체는 [llms-full.txt](${site.url}/llms-full.txt)에 있습니다.
+
+## 한눈에 보기
+
+${FACTS.map(([q, a]) => `- ${q}: ${strip(a)}`).join('\n')}
+- 홈페이지: ${site.url}
+
+## 주요 페이지
+
+${mainPaths.map((p) => staticPages.find((o) => o.path === p)).filter(Boolean).map(linkLine).join('\n')}
+
+## 대상별 안내
+
+${staticPages.filter((o) => o.path.startsWith('/for/')).map(linkLine).join('\n')}
+
+## 상회보(글)
+
+${posts.map((p) => `- [${p.title}](${site.url}${p.path}): ${p.description}`).join('\n')}
+
+## Optional
+
+- [개인정보 처리방침](${site.url}/privacy): 신청서로 받는 개인정보와 방문 통계 처리 기준
+- [RSS](${site.url}/rss.xml): 상회보 새 글
+- [사이트맵](${site.url}/sitemap.xml): 전체 주소 목록
+`;
+write('llms.txt', llms);
+
+const llmsFull = `# 열정상회 홈페이지 전체 본문
+
+> ${DEFINITION}
+
+출처: ${site.url} · 마지막 고침: ${[site.updated, ...posts.map((p) => p.updated)].sort().pop()}
+
+${staticPages.map((o) => `---
+
+주소: ${site.url}${o.path}
+
+${htmlToText(o.body)}`).join('\n\n')}
+
+${posts.map((p) => `---
+
+주소: ${site.url}${p.path}
+날짜: ${p.date}${p.updated !== p.date ? ` (고침 ${p.updated})` : ''} · 분류: ${p.category}
+
+# ${p.title}
+
+${p.description}
+
+${p.body.replace(/^:::(note|summary)?\s*$/gm, '').replace(/\]\(\//g, `](${site.url}/`).replace(/\n{3,}/g, '\n\n').trim()}`).join('\n\n')}
+`;
+write('llms-full.txt', llmsFull);
+
+/* ---------- IndexNow (네이버·빙에 새 글을 바로 알리는 열쇠 파일) ---------- */
+// site.json의 indexNowKey 값이 곧 파일 이름이자 내용입니다. 비밀 값이 아니며 누구나 볼 수 있는 확인용 파일입니다.
+if (site.indexNowKey) {
+  if (!/^[a-f0-9]{32}$/.test(site.indexNowKey)) {
+    console.error('site.json의 indexNowKey는 영문 소문자 a~f와 숫자 32자여야 합니다.');
+    process.exit(1);
+  }
+  fs.readdirSync(OUT).filter((f) => /^[a-f0-9]{32}\.txt$/.test(f) && f !== `${site.indexNowKey}.txt`).forEach((f) => fs.unlinkSync(path.join(OUT, f)));
+  write(`${site.indexNowKey}.txt`, site.indexNowKey);
+}
 
 /* ---------- 화면용 설정(site-config.js) ---------- */
 const runtime = {

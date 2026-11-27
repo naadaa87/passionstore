@@ -1,6 +1,7 @@
 // 열정상회 관리자 API (/api/admin/*)
 import { ensureSchema, all, first, run, now, today, uid, log, memberEvent } from './db.js';
 import { kpi } from './kpi.js';
+import { indexNow } from './indexnow.js';
 import { json, readJson, checkSameOrigin, HttpError, clip, isDate } from './http.js';
 import {
   currentAdmin, requireRole, createSession, destroySession, verifyPassword, hashPassword,
@@ -105,6 +106,7 @@ async function dispatch({ request, env, params }) {
     case 'PUT journal': return putPost(ctx);
     case 'DELETE journal': return deletePost(ctx);
     case 'POST uploads': return uploadImage(ctx);
+    case 'POST indexnow': return indexNow(ctx);
     case 'GET accounts': return listAccounts(ctx);
     case 'POST accounts': return createAccount(ctx);
     case 'PATCH accounts': return updateAccount(ctx);

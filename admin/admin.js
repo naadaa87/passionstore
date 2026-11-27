@@ -1657,11 +1657,27 @@
       }).join('');
       var v = c.put(head('상회보', {
         desc: '홈페이지 상회보에 올라가는 글입니다. 저장하면 GitHub 저장소에 기록되고 1~2분 뒤 상회보 목록, 홈, 사이트맵, RSS에 함께 반영됩니다.',
-        actions: '<a class="btn btn-primary" href="#/journal/new">새 글 쓰기</a>',
-      }) + '<div class="note plain"><p>새 글은 키워드 지도(docs/seo-guide.md)에서 다른 글과 겹치지 않는 말을 골라 씁니다. 격주에 한 편이 목표입니다.</p></div>' +
+        actions: '<button class="btn btn-line" type="button" data-indexnow>검색엔진에 알리기</button><a class="btn btn-primary" href="#/journal/new">새 글 쓰기</a>',
+      }) + '<div class="note plain"><p>새 글은 키워드 지도(docs/seo-guide.md)에서 다른 글과 겹치지 않는 말을 골라 씁니다. 격주에 한 편이 목표입니다. 글 맨 위에 <code>:::summary</code> 요점 상자를 넣으면 검색 결과와 AI 답변에 요약으로 쓰입니다. 글을 올리거나 고친 뒤 2분쯤 지나 <strong>검색엔진에 알리기</strong>를 누르면 네이버와 빙이 더 빨리 가져갑니다.</p></div>' +
         (d.items.length ? '<div class="tbl-wrap"><table class="tbl stack"><thead><tr><th>제목</th><th>분류</th><th>날짜</th><th class="n">분량</th><th>상태</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
           : empty('아직 글이 없습니다.', '<a href="#/journal/new">첫 글 쓰기</a>')), '상회보');
-      if (v) goRows(v);
+      if (!v) return;
+      goRows(v);
+      $('[data-indexnow]', v).addEventListener('click', function (e) {
+        var btn = e.currentTarget;
+        ask({
+          title: '검색엔진에 알릴까요?',
+          body: '<p>홈페이지의 모든 주소를 네이버와 빙에 보내 새 글과 고친 내용을 빨리 가져가도록 알립니다(IndexNow). 글을 저장한 뒤 2분쯤 지나 홈페이지에 반영된 다음에 눌러 주세요. 하루에 여러 번 누를 필요는 없습니다.</p>',
+          ok: '알리기',
+        }).then(function (ok) {
+          if (!ok) return;
+          btn.disabled = true;
+          return api('indexnow', { method: 'POST', body: {} }).then(function (d) {
+            var text = d.results.map(function (x) { return x.name + ' ' + x.note; }).join(', ');
+            toast((d.ok ? '주소 ' + d.count + '개를 알렸습니다. ' : '알리지 못했습니다. ') + text, !d.ok);
+          }).catch(fail).then(function () { btn.disabled = false; });
+        });
+      });
     });
   };
 
@@ -1671,6 +1687,9 @@
     '<li><span><code>[글자](/programs)</code></span><span class="muted">링크</span></li>' +
     '<li><span><code>- 목록</code> · <code>1. 목록</code></span><span class="muted">목록</span></li>' +
     '<li><span><code>&gt; 인용</code></span><span class="muted">인용 상자</span></li>' +
+    '<li><span><code>:::summary</code> … <code>:::</code></span><span class="muted">글 머리 요점 상자</span></li>' +
+    '<li><span><code>## 자주 묻는 질문</code> + <code>### 질문?</code></span><span class="muted">질문과 답</span></li>' +
+    '<li><span><code>| 칸 | 칸 |</code></span><span class="muted">표(둘째 줄은 <code>| --- | --- |</code>)</span></li>' +
     '<li><span><code>:::note</code> … <code>:::</code></span><span class="muted">글 끝 안내 상자</span></li>' +
     '<li><span><code>![설명](/assets/…)</code></span><span class="muted">사진</span></li></ul>';
 
@@ -1710,7 +1729,7 @@
         '<div class="write-pane"><div class="md-tools" role="toolbar" aria-label="글쓰기 도구">' +
         '<button type="button" data-md="h2">소제목</button><button type="button" data-md="h3">작은 제목</button><span class="sep"></span>' +
         '<button type="button" data-md="bold">굵게</button><button type="button" data-md="link">링크</button><span class="sep"></span>' +
-        '<button type="button" data-md="ul">목록</button><button type="button" data-md="ol">번호 목록</button><button type="button" data-md="quote">인용</button><button type="button" data-md="note">안내 상자</button><button type="button" data-md="hr">구분선</button><span class="sep"></span>' +
+        '<button type="button" data-md="ul">목록</button><button type="button" data-md="ol">번호 목록</button><button type="button" data-md="quote">인용</button><button type="button" data-md="summary">요점 상자</button><button type="button" data-md="faq">질문과 답</button><button type="button" data-md="table">표</button><button type="button" data-md="note">안내 상자</button><button type="button" data-md="hr">구분선</button><span class="sep"></span>' +
         '<button type="button" data-md="image">사진 넣기</button><input type="file" accept="image/jpeg,image/png,image/webp" data-file hidden></div>' +
         '<textarea data-body aria-label="본문" spellcheck="false" placeholder="첫 문단에서 이 글이 무엇을 알려 주는지 바로 말합니다.&#10;&#10;## 소제목&#10;&#10;문단을 씁니다.">' + h(body) + '</textarea></div>' +
         '<div class="preview-pane" aria-label="미리보기"><div class="p-title" data-p-title></div><p class="p-desc" data-p-desc></p><div class="article-body" data-preview></div></div></div>';
@@ -1846,6 +1865,9 @@
           } else if (k === 'ul') linePrefix('- ');
           else if (k === 'ol') linePrefix(function (i) { return (i + 1) + '. '; });
           else if (k === 'quote') linePrefix('> ');
+          else if (k === 'summary') insertBlock(':::summary\n- 이 글의 핵심 한 문장\n- 두 번째 요점\n- 세 번째 요점\n:::');
+          else if (k === 'faq') insertBlock('## 자주 묻는 질문\n\n### 사람들이 실제로 검색할 만한 질문?\n\n두세 문장으로 바로 답합니다.');
+          else if (k === 'table') insertBlock('| 구분 | 내용 |\n| --- | --- |\n| 첫째 | 설명 |\n| 둘째 | 설명 |');
           else if (k === 'note') insertBlock(':::note\n열정상회 장날에서 이 주제를 함께 이야기합니다. [장날 일정 보기](/jangnal)\n:::');
           else if (k === 'hr') insertBlock('---');
           else if (k === 'image') fileInput.click();
@@ -1909,7 +1931,7 @@
     var first = kws[0] || '';
     var h2 = (body.match(/^##\s+\S/gm) || []).length;
     var text = body.replace(/^:::.*$/gm, '').replace(/[#>*\-[\]()!`]/g, '').replace(/\s+/g, '');
-    var firstLine = body.split('\n').filter(function (l) { return l.trim(); })[0] || '';
+    var firstLine = body.replace(/^:::summary\n[\s\S]*?\n:::\s*$/m, '').split('\n').filter(function (l) { return l.trim(); })[0] || '';
     var internal = (body.match(/\]\(\/[^)]*\)/g) || []).length;
     out.push([title.length >= 8 && title.length <= 40, '제목 ' + title.length + '자 (8~40자)']);
     out.push([desc.length >= 80 && desc.length <= 110, '검색 결과 설명 ' + desc.length + '자 (80~110자)']);
@@ -1922,6 +1944,8 @@
     out.push([firstLine && !/^#/.test(firstLine), '본문이 소제목이 아닌 문단으로 시작합니다']);
     out.push([text.length >= 1000, '본문 ' + text.length.toLocaleString() + '자 (1,000자 이상 권장)']);
     out.push([internal >= 1, '홈페이지 안 링크 ' + internal + '개']);
+    out.push([/^:::summary/m.test(body), '글 머리 요점 상자(검색 결과와 AI 답변에 요약으로 쓰입니다)']);
+    out.push([/^## 자주 묻는 질문/m.test(body) && /^### .+\?/m.test(body), '“자주 묻는 질문” 묶음(질문은 ### 로, 물음표로 끝나게)']);
     out.push([/^:::note/m.test(body), '글 끝 안내 상자']);
     var clash = [];
     kws.forEach(function (k) {

@@ -3,7 +3,7 @@
 
   "url": "https://passionstore.kr",
   "name": "열정상회",
-  "updated": "2026-11-16",
+  "updated": "2026-11-27",
 
   "verification": {
     "_설명": "검색엔진에서 받은 소유확인 코드를 넣습니다. 네이버·구글·빙은 content 값만, 다음은 robots.txt에 넣으라는 한 줄 전체를 넣습니다.",
@@ -12,6 +12,9 @@
     "bing": "",
     "daumRobotsLine": ""
   },
+
+  "_indexNowKey_설명": "네이버·빙에 새 글을 바로 알리는 IndexNow 확인용 값입니다. 비밀 값이 아니며, 바꾸지 않습니다.",
+  "indexNowKey": "1e144fd05318a586349d97d4a0d47e42",
 
   "contact": {
     "email": "",

@@ -1,5 +1,6 @@
 // 상회보 글(마크다운)을 HTML로 바꾸는 작은 변환기. 외부 패키지 없이 동작합니다.
-// 지원: 앞머리(---), ## ### 제목, 문단, - 목록, 1. 목록, > 인용, **굵게**, [링크](주소), ![설명](이미지 주소), --- 구분선, :::note 상자
+// 지원: 앞머리(---), ## ### 제목, 문단, - 목록, 1. 목록, > 인용, **굵게**, [링크](주소), ![설명](이미지 주소), --- 구분선,
+//       | 표 |, :::note 안내 상자, :::summary 요점 상자(글 맨 위에 두면 검색 결과와 AI 답변에 요약으로 쓰입니다)
 // 이 파일은 관리자 화면의 미리보기에서도 그대로 씁니다(빌드할 때 public/admin/md.js로 복사).
 
 function esc(s) {
@@ -52,7 +53,8 @@ function toHtml(body) {
   let para = [];
   let list = null; // { type: 'ul'|'ol', items: [] }
   let quote = [];
-  let note = null;
+  let note = null; // { kind: 'note'|'summary', lines: [] }
+  let table = []; // 표 줄 모음
 
   const flushPara = () => {
     if (para.length) { out.push(`<p>${inline(para.join(' '))}</p>`); para = []; }
@@ -66,23 +68,39 @@ function toHtml(body) {
   const flushQuote = () => {
     if (quote.length) { out.push(`<blockquote><p>${inline(quote.join(' '))}</p></blockquote>`); quote = []; }
   };
-  const flushAll = () => { flushPara(); flushList(); flushQuote(); };
+  const cells = (row) => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+  const flushTable = () => {
+    if (!table.length) return;
+    const rows = table.map(cells);
+    table = [];
+    const hasHead = rows.length > 1 && rows[1].every((c) => /^:?-{2,}:?$/.test(c));
+    const headRow = hasHead ? rows[0] : null;
+    const bodyRows = hasHead ? rows.slice(2) : rows;
+    out.push(`<div class="table-wrap"><table class="table">${headRow ? `<thead><tr>${headRow.map((c) => `<th scope="col">${inline(c)}</th>`).join('')}</tr></thead>` : ''}<tbody>${bodyRows.map((r) =>
+      `<tr>${r.map((c, i) => (i === 0 && headRow ? `<th scope="row">${inline(c)}</th>` : `<td>${inline(c)}</td>`)).join('')}</tr>`).join('')}</tbody></table></div>`);
+  };
+  const flushAll = () => { flushPara(); flushList(); flushQuote(); flushTable(); };
 
   for (const raw of lines) {
     const line = raw.trimEnd();
 
     if (note !== null) {
       if (line.trim() === ':::') {
-        out.push(`<aside class="note-box">${toHtml(note.join('\n')).html}</aside>`);
+        const inner = toHtml(note.lines.join('\n')).html;
+        out.push(note.kind === 'summary'
+          ? `<aside class="summary-box" aria-label="이 글의 요점"><p class="summary-title">이 글의 요점</p>${inner}</aside>`
+          : `<aside class="note-box">${inner}</aside>`);
         note = null;
-      } else note.push(raw);
+      } else note.lines.push(raw);
       continue;
     }
-    if (line.trim() === ':::note') { flushAll(); note = []; continue; }
+    if (line.trim() === ':::note' || line.trim() === ':::summary') { flushAll(); note = { kind: line.trim().slice(3), lines: [] }; continue; }
 
     if (!line.trim()) { flushAll(); continue; }
 
     let m;
+    if (/^\|.*\|$/.test(line.trim())) { flushPara(); flushList(); flushQuote(); table.push(line); continue; }
+    flushTable();
     if ((m = /^(#{2,3})\s+(.*)$/.exec(line))) {
       flushAll();
       const level = m[1].length;
@@ -124,6 +142,8 @@ function toHtml(body) {
 function plainText(body) {
   return body
     .replace(/^:::.*$/gm, '')
+    .replace(/^\|[\s:|-]+\|$/gm, '')
+    .replace(/^\|(.*)\|$/gm, (m, row) => row.split('|').map((c) => c.trim()).join(' '))
     .replace(/^#{1,6}\s+/gm, '')
     .replace(/\*\*/g, '')
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')

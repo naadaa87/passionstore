@@ -98,6 +98,7 @@ docs/google-sheet-apps-script.gs ← 신청서를 구글 시트에 쌓는 스크
 | `/programs` | 프로그램 — 전체 프로그램, 상단 자세히, 1년의 흐름 |
 | `/jangnal` | 장날 — 일정, 진행 순서, 손님 안내, 참가 신청서 |
 | `/join` | 가입 안내 — 자격, 회원 구분, 절차, 가입 신청서 |
+| `/glossary` | 용어 사전 — 열정상회의 말과 사업자 모임·사업 형태 용어 풀이 |
 | `/charter` | 상회 헌장 7조, 이해상충 규칙 |
 | `/faq` | 자주 묻는 질문 |
 | `/for/shop-owners` | 자영업자·소상공인 |
@@ -110,8 +111,10 @@ docs/google-sheet-apps-script.gs ← 신청서를 구글 시트에 쌓는 스크
 ## 검색엔진 대응
 
 - 페이지마다 다른 제목·설명·키워드, 대표 주소(canonical), Open Graph·트위터 카드
-- 구조화 데이터(JSON-LD): Organization, WebSite, BreadcrumbList, FAQPage, BlogPosting, Event(장날 일정이 있을 때)
-- `sitemap.xml`(수정일 포함), `rss.xml`(상회보 전문), `robots.txt`
+- 구조화 데이터(JSON-LD): Organization(회비 없음·대상·지역), WebSite, BreadcrumbList, FAQPage, BlogPosting(요약·고친 날), DefinedTermSet(용어 사전), Event(장날 일정이 있을 때)
+- `sitemap.xml`(수정일·대표 그림 포함), `rss.xml`(상회보 전문), `robots.txt`(검색엔진과 AI 검색 로봇 허용)
+- AI 검색 대응: 홈·소개의 “한눈에 보기”(`tools/facts.js`), 글 머리 요점 상자(`:::summary`), 글 속 “자주 묻는 질문”, 용어 사전(`tools/glossary.js`), `llms.txt`·`llms-full.txt` 자동 생성
+- IndexNow: `site.json`의 `indexNowKey`로 확인 파일을 만들고, 관리자 화면 상회보의 “검색엔진에 알리기”로 네이버·빙에 주소를 보냄(`server/indexnow.js`)
 - 네이버·구글·빙·다음 소유확인 코드를 `site.json`에서 관리
 
 ## 신청서 접수

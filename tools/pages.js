@@ -3,6 +3,8 @@ const { esc } = require('./md');
 const { breadcrumbs, breadcrumbLd } = require('./layout');
 const { applyForm, jangnalForm } = require('./forms');
 const { scene, sceneOg, sceneAlt, icon, postImageTag } = require('./images');
+const { DEFINITION, FACTS } = require('./facts');
+const GLOSSARY = require('./glossary');
 
 // 대상별 페이지와 홈 카드에 쓰는 그림
 const PERSONA_ART = { 'shop-owners': 'tambang', freelancers: 'together', founders: 'packing', ceos: 'photo-workshop' };
@@ -27,9 +29,23 @@ function postList(posts, headingLevel = 3) {
         </ul>`;
 }
 
+// 한눈에 보기: 한 문장 정의와 묻고 답하는 표. 검색 결과와 AI 답변이 그대로 가져다 쓰기 좋은 자리입니다.
+function factsBlock(id, alt) {
+  return `
+    <section class="section${alt ? ' alt' : ''} glance" id="${id}">
+      <div class="wrap">
+        <h2>열정상회 한눈에 보기</h2>
+        <p class="lead definition">${esc(DEFINITION)}</p>
+        <dl class="facts">${FACTS.map(([q, a]) => `
+          <div><dt>${esc(q)}</dt><dd>${a}</dd></div>`).join('')}
+        </dl>
+      </div>
+    </section>`;
+}
+
 function faqDetails(items) {
   return `<div class="faq">${items.map(([q, a]) => `
-          <details><summary>${esc(q)}</summary><p>${a}</p></details>`).join('')}
+          <details><summary><h3>${esc(q)}</h3></summary><p>${a}</p></details>`).join('')}
         </div>`;
 }
 
@@ -44,14 +60,15 @@ function faqLd(items) {
 /* ---------------- 홈 ---------------- */
 function home(site, ctx) {
   const latest = ctx.posts.slice(0, 3);
-  const faqPick = [ctx.faq[0].items[1], ctx.faq[1].items[0], ctx.faq[2].items[1], ctx.faq[4].items[0]];
+  const faqPick = [ctx.faq[0].items[1], ctx.faq[1].items[3], ctx.faq[1].items[0], ctx.faq[2].items[1], ctx.faq[4].items[0]];
   return {
     path: '/',
     file: 'index.html',
-    titleFull: '열정상회 | 사업자·자영업자·프리랜서 모임, 업에 진심인 사람들의 커뮤니티',
-    desc: '사업자, 자영업자, 프리랜서, 1인 창업자가 모여 고민을 나누고 함께 공부하는 서울의 사업자 커뮤니티 열정상회. 6~8명 소그룹 상단과 매달 열리는 공개 모임 장날로 운영합니다.',
-    keywords: '열정상회, 사업자 모임, 자영업자 모임, 프리랜서 모임, 사업자 커뮤니티, 창업자 모임, 소상공인 모임, 서울 사업자 모임',
+    titleFull: '열정상회 | 사업자·자영업자·프리랜서 모임, 회비 없는 사업자 커뮤니티',
+    desc: '사업자 모임 열정상회. 자영업자, 프리랜서, 1인 창업자가 회비 없이 모여 고민을 나누고 함께 공부하는 서울의 사업자 커뮤니티입니다. 6~8명 소그룹 상단과 매달 열리는 공개 모임 장날로 운영합니다.',
+    keywords: '열정상회, 사업자 모임, 자영업자 모임, 프리랜서 모임, 사업자 커뮤니티, 창업자 모임, 소상공인 모임, 서울 사업자 모임, 무료 사업자 모임',
     active: '/',
+    graph: [faqLd(faqPick)],
     body: `
     <section class="hero hero-street">
       <div class="wrap">
@@ -75,6 +92,7 @@ function home(site, ctx) {
         <a class="text-link" href="/jangnal#apply" data-jangnal-next-link>알림 신청</a>
       </div>
     </section>
+${factsBlock('glance', false)}
 
     <section class="section">
       <div class="wrap split">
@@ -271,7 +289,8 @@ function about(site) {
     ...og('shop-front'),
     graph: [breadcrumbLd(site, crumbs)],
     body: `${head('열정상회를 소개합니다', '자기 업을 책임지는 사람들이 모여 서로 돕고, 같이 공부하고, 함께 도전하는 사업자 커뮤니티입니다.', crumbs,
-      [['why', '만든 이유'], ['name', '이름의 뜻'], ['mission', '미션과 가치'], ['operation', '운영 방식'], ['money', '회비 없는 모임'], ['words', '상회 용어']], 'shop-front')}
+      [['glance', '한눈에 보기'], ['why', '만든 이유'], ['name', '이름의 뜻'], ['mission', '미션과 가치'], ['operation', '운영 방식'], ['money', '회비 없는 모임'], ['words', '상회 용어']], 'shop-front')}
+${factsBlock('glance', true)}
 
     <section class="section" id="why">
       <div class="wrap split">
@@ -288,7 +307,7 @@ function about(site) {
           <li>사업을 하며 고립감을 느끼는 소규모 사업체 대표, 영국 조사에서 절반 가까이</li>
         </ul>
       </div>
-      <div class="wrap"><p class="note">출처: 통계청 비임금근로 부가조사(파이낸셜뉴스 2026.11.04 보도), 국세청 통계(세계일보 2025.07.06 보도), Start Up Loans·YouGov 조사(2025.12)</p></div>
+      <div class="wrap"><p class="note">출처: 국가데이터처(옛 통계청) 2026년 8월 비임금근로 부가조사(2026.11.04 발표), 국세청 통계(세계일보 2025.07.06 보도), Start Up Loans·YouGov 조사(2025.12)</p></div>
     </section>
 
     <section class="section alt" id="name">
@@ -440,6 +459,7 @@ function about(site) {
           <div><dt>단골·길잡이</dt><dd>1년 넘게 활동한 상회원, 그리고 새 회원의 첫 3개월을 챙기는 단골</dd></div>
           <div><dt>상회보</dt><dd>열정상회의 소식지이자 이 홈페이지의 글 모음</dd></div>
         </dl>
+        <a class="text-link" href="/glossary">용어 사전에서 더 자세히 보기</a>
       </div>
     </section>
 `,
@@ -687,6 +707,7 @@ function jangnal(site, ctx) {
           </div>
         </div>
         <p class="more-links">장날에 오기 전에 읽어 보면 좋은 글: <a href="/journal/choosing-business-group">사업자 모임, 나가 보기 전에 확인할 다섯 가지</a></p>
+        <p class="more-links">모임이 처음이라 망설여진다면 <a href="/journal/networking-first-time">사업자 네트워킹 모임이 처음일 때 읽을 글</a>을 먼저 보셔도 좋습니다.</p>
       </div>
     </section>
 ${jangnalForm}
@@ -752,6 +773,7 @@ function join(site, ctx) {
           </table>
         </div>
         <p class="note">회원을 추천해도 수당이나 보상은 없습니다. 좋은 사람을 소개하는 일 자체가 서로 돕는 일입니다.</p>
+        <p class="more-links">회비 없는 모임을 고를 때 볼 것은 <a href="/journal/free-business-group">무료 사업자 모임, 회비가 없어도 오래가는 모임의 조건</a>에, 자영업자·소상공인·프리랜서라는 말의 차이는 <a href="/journal/business-types-explained">이 글</a>에 정리했습니다.</p>
       </div>
     </section>
 
@@ -874,9 +896,9 @@ function faqPage(site, ctx) {
   return {
     path: '/faq',
     file: 'faq.html',
-    title: '자주 묻는 질문 — 사업자 모임 가입, 상단, 장날, 운영 원칙',
-    desc: '열정상회에 관해 자주 묻는 질문. 누가 가입할 수 있는지, 회비 없이 운영하는 방식, 상단 배정, 장날 참여, 영업 금지 규칙까지 한곳에 모았습니다.',
-    keywords: '사업자 모임 가입 조건, 무료 사업자 모임, 프리랜서 모임 가입, 사업자 커뮤니티 질문',
+    title: '자주 묻는 질문 — 사업자 모임 가입 조건, 회비, 상단, 장날',
+    desc: `열정상회에 관해 자주 묻는 질문 ${all.length}가지. 사업자 모임 가입 조건, 회비가 없는 이유, 상단 배정, 장날 참여, 온라인 참여, 영업 금지 규칙까지 한곳에 모았습니다.`,
+    keywords: '사업자 모임 가입 조건, 사업자 모임 회비, 프리랜서 모임 가입, 사업자 커뮤니티 질문, 자영업자 모임 질문',
     active: '/faq',
     ...og('tea-tray'),
     graph: [breadcrumbLd(site, crumbs), faqLd(all)],
@@ -995,7 +1017,7 @@ function journalIndex(site, ctx) {
     path: '/journal/',
     file: 'journal/index.html',
     title: '상회보 — 사업자·자영업자·프리랜서를 위한 글',
-    desc: '열정상회 상회보. 사업자 모임 고르는 법, 혼자 일하는 사장님의 고민, 가격 실험, 프리랜서 단가, 소그룹 진행법, 소상공인 지원사업 찾는 법처럼 업을 하는 사람에게 필요한 이야기를 씁니다.',
+    desc: '열정상회 상회보. 사업자 모임 고르는 법, 네트워킹과 스터디, 협업, 가격 실험, 프리랜서 단가, 소그룹 진행법, 소상공인 지원사업 찾는 법처럼 업을 하는 사람에게 필요한 이야기를 씁니다.',
     keywords: '상회보, 자영업자 칼럼, 사업자 글, 프리랜서 팁, 소상공인 정보, 사업 운영 노하우',
     active: '/journal/',
     pageType: 'CollectionPage',
@@ -1010,6 +1032,81 @@ function journalIndex(site, ctx) {
       <div class="wrap">
         ${postList(ctx.posts, 2)}
         <p class="note">새 글은 <a href="/rss.xml">RSS</a>로도 받아 볼 수 있습니다.</p>
+      </div>
+    </section>
+
+    <section class="section alt" id="topics">
+      <div class="wrap">
+        <h2>주제별로 보기</h2>
+        <div class="topic-grid">${[...new Set(ctx.posts.map((p) => p.category))].map((c) => `
+          <div>
+            <h3>${esc(c)}</h3>
+            <ul>${ctx.posts.filter((p) => p.category === c).map((p) => `<li><a href="${p.path}">${esc(p.title)}</a></li>`).join('')}</ul>
+          </div>`).join('')}
+        </div>
+        <p class="more-links">모임에서 쓰는 말이 낯설다면 <a href="/glossary">용어 사전</a>을, 열정상회가 궁금하다면 <a href="/faq">자주 묻는 질문</a>을 보세요.</p>
+      </div>
+    </section>
+`,
+  };
+}
+
+/* ---------------- 용어 사전 ---------------- */
+function glossary(site) {
+  const crumbs = [['홈', '/'], ['용어 사전', '/glossary']];
+  const strip = (s) => s.replace(/<[^>]+>/g, '');
+  const all = GLOSSARY.flatMap((g) => g.terms);
+  return {
+    path: '/glossary',
+    file: 'glossary.html',
+    title: '용어 사전 — 상단, 장날, 핫시트, 마스터마인드 그룹, 소상공인 뜻',
+    desc: `사업자 모임에서 자주 듣는 말 ${all.length}가지를 한두 문장으로 풀었습니다. 상단, 장날, 핫시트, 실행 장부 같은 열정상회의 말부터 마스터마인드 그룹, 소상공인, 자영업자, 프리랜서의 뜻까지.`,
+    keywords: '핫시트 뜻, 마스터마인드 그룹 뜻, 소상공인 뜻, 자영업자 뜻, 프리랜서 뜻, 상단, 장날, 사업자 모임 용어',
+    active: '',
+    pageType: 'CollectionPage',
+    ...og('hakdang'),
+    graph: [
+      breadcrumbLd(site, crumbs),
+      {
+        '@type': 'DefinedTermSet',
+        '@id': site.url + '/glossary#terms',
+        name: '열정상회 용어 사전',
+        description: '사업자 모임과 열정상회에서 쓰는 말 풀이',
+        inLanguage: 'ko-KR',
+        hasDefinedTerm: all.map((t) => ({
+          '@type': 'DefinedTerm',
+          '@id': site.url + '/glossary#' + t.id,
+          name: t.term,
+          description: strip(t.def),
+          url: site.url + '/glossary#' + t.id,
+          inDefinedTermSet: { '@id': site.url + '/glossary#terms' },
+        })),
+      },
+    ],
+    body: `${head('용어 사전', '사업자 모임에서 자주 듣는 말과 열정상회에서 쓰는 말을 한두 문장으로 풀었습니다.', crumbs,
+      GLOSSARY.map((g) => [g.id, g.group]), 'hakdang')}
+${GLOSSARY.map((g, i) => `
+    <section class="section${i % 2 ? ' alt' : ''}" id="${g.id}">
+      <div class="wrap">
+        <h2>${esc(g.group)}</h2>
+        <p class="lead">${esc(g.intro)}</p>
+        <dl class="term-list">${g.terms.map((t) => `
+          <div id="${t.id}">
+            <dt>${esc(t.term)}</dt>
+            <dd><p>${t.def}</p>${t.more ? `<p class="term-more">${t.more.map(([label, href]) => `<a href="${href}">${esc(label)}</a>`).join('')}</p>` : ''}</dd>
+          </div>`).join('')}
+        </dl>
+      </div>
+    </section>`).join('')}
+
+    <section class="cta">
+      <div class="wrap">
+        <h2>말보다 직접 겪어 보는 것이 빠릅니다</h2>
+        <p>장날은 누구나 올 수 있는 한 달에 한 번의 공개 모임입니다. 참가비는 없습니다.</p>
+        <div class="actions">
+          <a class="btn btn-light" href="/jangnal">장날 일정 보기</a>
+          <a class="btn btn-outline-light" href="/faq">자주 묻는 질문</a>
+        </div>
       </div>
     </section>
 `,
@@ -1092,4 +1189,4 @@ function notFound() {
   };
 }
 
-module.exports = { home, about, programs, jangnal, join, charter, faqPage, persona, journalIndex, privacy, notFound, fmtDate, postList };
+module.exports = { home, about, programs, jangnal, join, charter, faqPage, glossary, persona, journalIndex, privacy, notFound, fmtDate, postList };
